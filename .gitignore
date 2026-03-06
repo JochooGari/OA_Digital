@@ -1,0 +1,60 @@
+**/.pbi/localSettings.json
+**/.pbi/cache.abf
+
+# Virtual environment
+.venv/
+
+# Large files
+*.pbix
+*.mp4
+*.abf
+
+# Cache and temp
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
+
+# Backup folders
+Backup/
+TMDL_Backup/
+
+# Data folders (too large)
+data_SFCC/
+data lot 1/
+perf_dataset/
+sample json/
+json model/
+
+# Node modules
+node_modules/
+package-lock.json
+
+# IDE
+.vscode/
+.idea/
+
+# Old versions
+A Organiser/
+2026_02_16/
+
+# Dossiers hors scope du dépôt GitHub (conserver uniquement PowerBI_COE/ et CLAUDE.md)
+.claude/
+Dashboard/
+Documentation/
+Fchier PBI/
+Image/
+NERD_PBIP/
+NERD_PBIP_FIXED/
+NERD_PBIP_SEMANTIC/
+Nerd_v3.Report/
+Nerd_v3.SemanticModel/
+OARealisticLoadTestTool/
+OARealisticLoadTestTool.rar
+Web/
+webapp/
+extractions_raw.sql
+
+# Secrets — ne jamais committer
+PowerBI_COE/Auto Licence Cleaning/auto_clean_licences/.env
+PowerBI_COE/Auto Licence Cleaning/auto_clean_licences/output/
