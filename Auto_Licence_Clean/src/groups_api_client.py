@@ -1,29 +1,25 @@
 import logging
 import time
 import requests
+import google.auth
+import google.auth.transport.requests
 import config
 
 logger = logging.getLogger(__name__)
 
 
 def get_access_token() -> str:
-    """Obtain an OAuth2 access token via client credentials flow."""
-    response = requests.post(
-        config.API_TOKEN_URL,
-        data={
-            "grant_type": "client_credentials",
-            "client_id": config.API_CLIENT_ID,
-            "client_secret": config.API_CLIENT_SECRET,
-            "scope": config.API_SCOPE,
-        },
-        timeout=30,
+    """Obtain a Google OAuth2 access token from the service account (ADC).
+
+    On Cloud Run, the service account token is generated automatically.
+    Locally, uses Application Default Credentials (gcloud auth application-default login).
+    """
+    credentials, project = google.auth.default(
+        scopes=["https://www.googleapis.com/auth/cloud-platform"]
     )
-    response.raise_for_status()
-    token = response.json().get("access_token")
-    if not token:
-        raise ValueError("No access_token in OAuth2 response.")
-    logger.info("OAuth2 token obtained successfully.")
-    return token
+    credentials.refresh(google.auth.transport.requests.Request())
+    logger.info("Google OAuth2 token obtained (project=%s).", project)
+    return credentials.token
 
 
 _RETRY_STATUS_CODES = {429, 500, 502, 503, 504}
@@ -34,7 +30,6 @@ _RETRY_BACKOFF = 2  # seconds (doubles each attempt)
 def remove_members_batch(token: str, members: list[str]) -> dict:
     """
     Remove a batch of members from the Pro licence group.
-    The API SafeMode allows max 20 removals per call.
     Retries automatically on transient errors (429, 5xx) with exponential backoff.
     """
     url = f"{config.API_BASE_URL}/groups/{config.PRO_LICENSE_GROUP_EMAIL}/members"
@@ -61,7 +56,7 @@ def remove_members_batch(token: str, members: list[str]) -> dict:
 def revoke_licences(emails: list[str]) -> dict:
     """
     Revoke Pro licences for a list of users.
-    Splits into batches of BATCH_SIZE to comply with API SafeMode (max 20/call).
+    Splits into batches of BATCH_SIZE to comply with API limits.
 
     Returns a summary dict with counts of successes and failures.
     """
@@ -80,7 +75,7 @@ def revoke_licences(emails: list[str]) -> dict:
         try:
             result = remove_members_batch(token, batch)
             summary["revoked"] += len(batch)
-            logger.info("Batch %d/%d — success. API response status: %s", i, len(batches), result.get("status"))
+            logger.info("Batch %d/%d — success. API response: %s", i, len(batches), result.get("status"))
         except requests.HTTPError as e:
             summary["failed"] += len(batch)
             error_msg = f"Batch {i}/{len(batches)} failed (HTTP {e.response.status_code}): {e.response.text}"

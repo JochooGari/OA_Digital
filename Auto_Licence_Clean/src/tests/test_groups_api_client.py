@@ -6,36 +6,25 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 
-@patch("groups_api_client.requests.post")
-def test_get_access_token_success(mock_post):
-    """Should return the access token from the OAuth2 response."""
-    mock_post.return_value.json.return_value = {"access_token": "my-token"}
-    mock_post.return_value.raise_for_status = MagicMock()
+@patch("groups_api_client.google.auth.default")
+@patch("groups_api_client.google.auth.transport.requests.Request")
+def test_get_access_token_success(mock_request, mock_auth_default):
+    """Should return a Google OAuth2 access token."""
+    mock_creds = MagicMock()
+    mock_creds.token = "google-token-123"
+    mock_auth_default.return_value = (mock_creds, "my-project")
 
     import groups_api_client
     token = groups_api_client.get_access_token()
 
-    assert token == "my-token"
+    assert token == "google-token-123"
+    mock_creds.refresh.assert_called_once()
 
 
-@patch("groups_api_client.requests.post")
-def test_get_access_token_missing_token_raises(mock_post):
-    """Should raise ValueError if the response contains no access_token."""
-    mock_post.return_value.json.return_value = {}
-    mock_post.return_value.raise_for_status = MagicMock()
-
-    import groups_api_client
-    with pytest.raises(ValueError, match="No access_token"):
-        groups_api_client.get_access_token()
-
-
-@patch("groups_api_client.requests.post")
+@patch("groups_api_client.get_access_token", return_value="google-token-123")
 @patch("groups_api_client.requests.delete")
-def test_revoke_licences_single_batch(mock_delete, mock_post):
+def test_revoke_licences_single_batch(mock_delete, mock_token):
     """Should call the API once for a list smaller than BATCH_SIZE."""
-    mock_post.return_value.json.return_value = {"access_token": "my-token"}
-    mock_post.return_value.raise_for_status = MagicMock()
-
     mock_delete.return_value.json.return_value = {"status": "OK"}
     mock_delete.return_value.status_code = 200
     mock_delete.return_value.raise_for_status = MagicMock()
@@ -50,13 +39,10 @@ def test_revoke_licences_single_batch(mock_delete, mock_post):
     assert mock_delete.call_count == 1
 
 
-@patch("groups_api_client.requests.post")
+@patch("groups_api_client.get_access_token", return_value="google-token-123")
 @patch("groups_api_client.requests.delete")
-def test_revoke_licences_multiple_batches(mock_delete, mock_post):
+def test_revoke_licences_multiple_batches(mock_delete, mock_token):
     """Should split into multiple API calls when list exceeds BATCH_SIZE."""
-    mock_post.return_value.json.return_value = {"access_token": "my-token"}
-    mock_post.return_value.raise_for_status = MagicMock()
-
     mock_delete.return_value.json.return_value = {"status": "OK"}
     mock_delete.return_value.status_code = 200
     mock_delete.return_value.raise_for_status = MagicMock()
@@ -73,13 +59,10 @@ def test_revoke_licences_multiple_batches(mock_delete, mock_post):
     assert summary["failed"] == 0
 
 
-@patch("groups_api_client.requests.post")
+@patch("groups_api_client.get_access_token", return_value="google-token-123")
 @patch("groups_api_client.requests.delete")
-def test_revoke_licences_partial_failure(mock_delete, mock_post):
+def test_revoke_licences_partial_failure(mock_delete, mock_token):
     """Should continue processing remaining batches when one batch fails."""
-    mock_post.return_value.json.return_value = {"access_token": "my-token"}
-    mock_post.return_value.raise_for_status = MagicMock()
-
     http_error = MagicMock()
     http_error.response.status_code = 400
     http_error.response.text = "Bad Request"
