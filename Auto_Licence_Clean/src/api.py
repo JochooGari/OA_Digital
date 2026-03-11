@@ -79,6 +79,33 @@ def get_users():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
+@app.route("/api/count")
+def count_users():
+    """Query BigQuery and return ONLY the count (no emails)."""
+    try:
+        emails = bigquery_client.get_users_to_revoke()
+        count = len(emails)
+
+        run_record = {
+            "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC"),
+            "mode": "COUNT",
+            "users_identified": count,
+            "revoked": 0,
+            "failed": 0,
+            "outcome": "SUCCESS",
+        }
+        execution_history.append(run_record)
+
+        return jsonify({
+            "status": "ok",
+            "count": count,
+            "queried_at": run_record["timestamp"],
+        })
+    except Exception as e:
+        logger.error("BigQuery count failed: %s", e)
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
 # ── API: Dry Run ────────────────────────────────────
 
 @app.route("/api/dry-run", methods=["POST"])
