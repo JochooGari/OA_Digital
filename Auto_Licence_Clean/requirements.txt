@@ -1,6 +1,9 @@
 google-cloud-bigquery==3.25.0
 google-auth==2.29.0
 requests==2.32.3
+flask==3.1.0
+flask-cors==5.0.0
+python-dotenv==1.0.1
 
 # Dev / tests uniquement
 pytest==8.3.4

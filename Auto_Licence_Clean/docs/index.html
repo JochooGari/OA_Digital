@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Auto Licence Clean | L'OREAL BTDP</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#c5a86d",
+            "background-light": "#f8f7f6",
+            "background-dark": "#1d1b15",
+            "loreal-black": "#1a1a1a",
+          },
+          fontFamily: { "display": ["Inter", "sans-serif"] },
+          borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+        },
+      },
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .sidebar-active { @apply bg-primary/10 border-r-2 border-primary text-primary; }
+    .endpoint-detail { display: none; }
+    .endpoint-detail.open { display: block; }
+    .loading { opacity: 0.5; pointer-events: none; }
+    .spinner { animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body class="bg-background-light text-slate-900 font-display">
+
+<!-- ═══ HEADER ═══ -->
+<header class="fixed top-0 z-50 w-full h-16 bg-loreal-black flex items-center justify-between px-6 border-b border-white/10">
+  <div class="flex items-center gap-6">
+    <div class="flex items-center gap-3">
+      <div class="bg-white p-1 rounded-sm">
+        <svg class="w-8 h-8 text-black" fill="none" viewBox="0 0 48 48"><path d="M6 6H42L36 24L42 42H6L12 24L6 6Z" fill="currentColor"/></svg>
+      </div>
+      <h1 class="text-white font-bold tracking-tight text-lg uppercase">L'OREAL <span class="font-normal text-slate-400 ml-2">| Auto Licence Clean</span></h1>
+    </div>
+  </div>
+  <div class="flex items-center gap-4">
+    <div class="flex gap-2">
+      <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-green-500/20 text-green-400 border border-green-500/30">Live</span>
+      <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-orange-500/20 text-orange-400 border border-orange-500/30">Pre-Prod</span>
+      <span id="header-dryrun-badge" class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-primary/20 text-primary border border-primary/30">DRY_RUN: ACTIVE</span>
+    </div>
+    <div class="h-8 w-px bg-white/10 mx-2"></div>
+    <button class="p-2 text-slate-400 hover:text-white transition-colors"><span class="material-symbols-outlined">notifications</span></button>
+    <button class="p-2 text-slate-400 hover:text-white transition-colors"><span class="material-symbols-outlined">settings</span></button>
+    <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-white">MM</div>
+  </div>
+</header>
+
+<div class="flex pt-16 h-screen overflow-hidden">
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside class="w-64 flex-shrink-0 bg-white border-r border-slate-200 flex flex-col">
+  <nav class="flex-1 py-6 space-y-8">
+    <div>
+      <h3 class="px-6 text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">Overview</h3>
+      <div class="space-y-1">
+        <a class="flex items-center gap-3 px-6 py-2.5 text-sm font-medium sidebar-active" href="#" data-section="dashboard">
+          <span class="material-symbols-outlined text-[20px]">dashboard</span> Status
+        </a>
+        <a class="flex items-center gap-3 px-6 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all" href="#" data-section="config">
+          <span class="material-symbols-outlined text-[20px]">tune</span> Configuration
+        </a>
+      </div>
+    </div>
+    <div>
+      <h3 class="px-6 text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">API Endpoints</h3>
+      <div class="space-y-1">
+        <a class="flex items-center gap-3 px-6 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all" href="#" data-section="bigquery">
+          <span class="material-symbols-outlined text-[20px]">database</span> BigQuery
+        </a>
+        <a class="flex items-center gap-3 px-6 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all" href="#" data-section="groups-api">
+          <span class="material-symbols-outlined text-[20px]">group</span> Groups API
+        </a>
+      </div>
+    </div>
+    <div>
+      <h3 class="px-6 text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">Architecture</h3>
+      <div class="space-y-1">
+        <a class="flex items-center gap-3 px-6 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all" href="#" data-section="architecture">
+          <span class="material-symbols-outlined text-[20px]">schema</span> Diagram
+        </a>
+      </div>
+    </div>
+    <div>
+      <h3 class="px-6 text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">Execution</h3>
+      <div class="space-y-1">
+        <a class="flex items-center gap-3 px-6 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all" href="#" data-section="dryrun">
+          <span class="material-symbols-outlined text-[20px]">play_circle</span> Dry Run
+        </a>
+        <a class="flex items-center gap-3 px-6 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all" href="#" data-section="logs">
+          <span class="material-symbols-outlined text-[20px]">list_alt</span> Logs
+        </a>
+      </div>
+    </div>
+  </nav>
+  <div class="p-6 border-t border-slate-200">
+    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-tight">BTDP Groups API v2.4.1</p>
+  </div>
+</aside>
+
+<!-- ═══ MAIN CONTENT ═══ -->
+<main class="flex-1 overflow-y-auto bg-slate-50 p-8">
+  <div class="max-w-6xl mx-auto space-y-8">
+
+    <!-- Page Title -->
+    <div class="flex items-end justify-between">
+      <div>
+        <h2 class="text-3xl font-black text-slate-900 tracking-tight">Dashboard Overview</h2>
+        <p class="text-slate-500 mt-1">Monitoring automated license cleanup across BTDP environments.</p>
+      </div>
+      <div class="flex gap-3">
+        <button id="btn-refresh" class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-slate-50 transition-all">
+          <span class="material-symbols-outlined text-sm">refresh</span> Refresh
+        </button>
+        <button id="btn-dryrun" class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
+          <span class="material-symbols-outlined text-sm">play_arrow</span> Run Dry Run
+        </button>
+      </div>
+    </div>
+
+    <!-- ═══ Status Cards ═══ -->
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Last Run</p>
+        <h3 id="stat-lastrun" class="text-lg font-bold text-slate-900">--</h3>
+        <p id="stat-lastrun-time" class="text-xs text-slate-500">--</p>
+      </div>
+      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Identified</p>
+        <h3 id="stat-identified" class="text-3xl font-black text-primary">--</h3>
+        <p class="text-xs text-slate-500">Inactive accounts</p>
+      </div>
+      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Revoked</p>
+        <h3 id="stat-revoked" class="text-3xl font-black text-slate-900">0</h3>
+        <p class="text-xs text-primary font-medium italic">Dry-run active</p>
+      </div>
+      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Retention</p>
+        <h3 id="stat-retention" class="text-3xl font-black text-slate-900">120</h3>
+        <p class="text-xs text-slate-500">Days policy</p>
+      </div>
+      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Batch Size</p>
+        <h3 id="stat-batch" class="text-3xl font-black text-slate-900">20</h3>
+        <p class="text-xs text-slate-500">Per API call</p>
+      </div>
+    </div>
+
+    <!-- ═══ Two columns: Endpoints + Architecture ═══ -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+      <!-- API Endpoints -->
+      <section class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+        <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
+          <h3 class="font-bold text-slate-900 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">api</span> BTDP Groups API
+          </h3>
+          <a class="text-xs font-bold text-primary uppercase tracking-wider hover:underline" href="https://api.loreal.com/api-catalogue/btdp-groups-api-54" target="_blank">API Catalogue</a>
+        </div>
+        <div class="divide-y divide-slate-100">
+
+          <!-- GET members -->
+          <div class="endpoint-toggle px-6 py-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-all">
+            <div class="flex items-center gap-4">
+              <span class="px-2 py-0.5 rounded text-[10px] font-black bg-blue-500 text-white uppercase w-16 text-center">GET</span>
+              <span class="text-sm font-mono text-slate-600">/groups/{group_email}/members</span>
+            </div>
+            <span class="material-symbols-outlined text-green-500 text-lg">check_circle</span>
+          </div>
+          <div class="endpoint-detail px-6 py-4 bg-slate-50/50">
+            <p class="text-xs text-slate-500 mb-3">List all members of a group. Supports <code class="bg-slate-200 px-1 rounded">?source=gcp|azure|both_common</code> filter.</p>
+            <div class="bg-loreal-black rounded-lg p-4 text-xs font-mono text-slate-300 overflow-x-auto relative">
+              <button class="copy-btn absolute top-2 right-2 px-2 py-1 bg-slate-700 text-slate-400 rounded text-[10px] hover:text-white">Copy</button>
+<pre>curl -X GET \
+  "https://api.loreal.net/global/it4it/itg-groupsapi/v1/groups/MY-GROUP@loreal.com/members" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)"</pre>
+            </div>
+          </div>
+
+          <!-- DELETE members -->
+          <div class="endpoint-toggle px-6 py-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-all">
+            <div class="flex items-center gap-4">
+              <span class="px-2 py-0.5 rounded text-[10px] font-black bg-red-600 text-white uppercase w-16 text-center">DELETE</span>
+              <span class="text-sm font-mono text-slate-600">/groups/{group_email}/members</span>
+            </div>
+            <span class="material-symbols-outlined text-green-500 text-lg">check_circle</span>
+          </div>
+          <div class="endpoint-detail px-6 py-4 bg-slate-50/50">
+            <p class="text-xs text-slate-500 mb-3">Remove members from a group. Service account must be <strong>owner</strong> of the group.</p>
+            <div class="bg-loreal-black rounded-lg p-4 text-xs font-mono text-slate-300 overflow-x-auto relative">
+              <button class="copy-btn absolute top-2 right-2 px-2 py-1 bg-slate-700 text-slate-400 rounded text-[10px] hover:text-white">Copy</button>
+<pre>curl -X DELETE \
+  "https://api.loreal.net/global/it4it/itg-groupsapi/v1/groups/MY-GROUP@loreal.com/members" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  --json '{"members": ["john.doe@loreal.com"]}'</pre>
+            </div>
+          </div>
+
+          <!-- POST members -->
+          <div class="endpoint-toggle px-6 py-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-all">
+            <div class="flex items-center gap-4">
+              <span class="px-2 py-0.5 rounded text-[10px] font-black bg-green-600 text-white uppercase w-16 text-center">POST</span>
+              <span class="text-sm font-mono text-slate-600">/groups/{group_email}/members</span>
+            </div>
+            <span class="material-symbols-outlined text-green-500 text-lg">check_circle</span>
+          </div>
+          <div class="endpoint-detail px-6 py-4 bg-slate-50/50">
+            <p class="text-xs text-slate-500 mb-3">Add members to a group.</p>
+            <div class="bg-loreal-black rounded-lg p-4 text-xs font-mono text-slate-300 overflow-x-auto relative">
+              <button class="copy-btn absolute top-2 right-2 px-2 py-1 bg-slate-700 text-slate-400 rounded text-[10px] hover:text-white">Copy</button>
+<pre>curl -X POST \
+  "https://api.loreal.net/global/it4it/itg-groupsapi/v1/groups/MY-GROUP@loreal.com/members" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  --json '{"members": ["john.doe@loreal.com"]}'</pre>
+            </div>
+          </div>
+
+          <!-- GET authorized -->
+          <div class="endpoint-toggle px-6 py-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-all">
+            <div class="flex items-center gap-4">
+              <span class="px-2 py-0.5 rounded text-[10px] font-black bg-blue-500 text-white uppercase w-16 text-center">GET</span>
+              <span class="text-sm font-mono text-slate-600">/groups/{group_email}/authorized</span>
+            </div>
+            <span class="material-symbols-outlined text-green-500 text-lg">check_circle</span>
+          </div>
+          <div class="endpoint-detail px-6 py-4 bg-slate-50/50">
+            <p class="text-xs text-slate-500 mb-3">List group owners (principals authorized to add/remove members).</p>
+            <div class="bg-loreal-black rounded-lg p-4 text-xs font-mono text-slate-300 overflow-x-auto relative">
+              <button class="copy-btn absolute top-2 right-2 px-2 py-1 bg-slate-700 text-slate-400 rounded text-[10px] hover:text-white">Copy</button>
+<pre>curl -X GET \
+  "https://api.loreal.net/global/it4it/itg-groupsapi/v1/groups/MY-GROUP@loreal.com/authorized" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)"</pre>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Architecture Diagram -->
+      <section class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="font-bold text-slate-900 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">account_tree</span> System Architecture
+          </h3>
+          <span class="text-[10px] bg-slate-100 px-2 py-1 rounded text-slate-500">GCP CLOUD NATIVE</span>
+        </div>
+        <div class="flex-1 flex flex-col items-center justify-center gap-6 py-4">
+          <div class="px-4 py-3 bg-slate-800 rounded-lg text-white text-xs font-bold flex items-center gap-3 border border-slate-700 shadow-md">
+            <span class="material-symbols-outlined text-blue-400">schedule</span> Cloud Scheduler (02h00)
+          </div>
+          <span class="material-symbols-outlined text-slate-300">arrow_downward</span>
+          <div class="px-4 py-3 bg-slate-800 rounded-lg text-white text-xs font-bold flex items-center gap-3 border border-slate-700 shadow-md relative w-52 justify-center">
+            <span class="material-symbols-outlined text-green-400">memory</span> Cloud Run Job (Python)
+            <div class="absolute -right-36 top-1/2 -translate-y-1/2 flex flex-col gap-2">
+              <div class="px-3 py-2 bg-slate-100 border border-slate-200 rounded text-[10px] text-slate-600 font-bold">BigQuery (SSDS IT)</div>
+              <div class="px-3 py-2 bg-slate-100 border border-slate-200 rounded text-[10px] text-slate-600 font-bold">Groups API</div>
+              <div class="px-3 py-2 bg-slate-100 border border-slate-200 rounded text-[10px] text-slate-600 font-bold">Cloud Logging</div>
+            </div>
+          </div>
+          <span class="material-symbols-outlined text-slate-300">arrow_downward</span>
+          <div class="px-4 py-3 bg-primary/20 border border-primary/40 rounded-lg text-primary text-xs font-bold flex items-center gap-3">
+            <span class="material-symbols-outlined">shield</span> Google OAuth2 (ADC)
+          </div>
+        </div>
+        <div class="mt-4 p-3 bg-slate-50 rounded-lg">
+          <p class="text-[10px] text-slate-500">
+            <strong>Project:</strong> oa-data-coepowerbi-np &bull;
+            <strong>SA:</strong> 89152354183-compute@developer.gserviceaccount.com
+          </p>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- ═══ Configuration Table ═══ -->
+    <section class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+      <div class="px-6 py-4 border-b border-slate-200 bg-slate-50/50 flex items-center justify-between">
+        <h3 class="font-bold text-slate-900">Environment Variables</h3>
+        <button id="btn-validate-config" class="text-xs font-bold text-primary flex items-center gap-1 hover:underline">
+          <span class="material-symbols-outlined text-sm">verified</span> Validate Config
+        </button>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead>
+            <tr class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold tracking-wider">
+              <th class="px-6 py-3">Variable Key</th>
+              <th class="px-6 py-3">Current Value</th>
+              <th class="px-6 py-3">Source</th>
+              <th class="px-6 py-3 text-center">Status</th>
+            </tr>
+          </thead>
+          <tbody id="config-table-body" class="divide-y divide-slate-100">
+            <tr>
+              <td class="px-6 py-4 font-mono text-xs text-slate-700">BIGQUERY_BILLING_PROJECT</td>
+              <td class="px-6 py-4 text-slate-600">oa-data-coepowerbi-np</td>
+              <td class="px-6 py-4 text-slate-500">Matthieu</td>
+              <td class="px-6 py-4 text-center"><span class="material-symbols-outlined text-green-500 text-lg">verified</span></td>
+            </tr>
+            <tr>
+              <td class="px-6 py-4 font-mono text-xs text-slate-700">PRO_LICENSE_GROUP_EMAIL</td>
+              <td class="px-6 py-4 text-slate-400 italic">En attente</td>
+              <td class="px-6 py-4 text-slate-500">Anes</td>
+              <td class="px-6 py-4 text-center"><span class="material-symbols-outlined text-orange-400 text-lg">warning</span></td>
+            </tr>
+            <tr>
+              <td class="px-6 py-4 font-mono text-xs text-slate-700">DRY_RUN</td>
+              <td class="px-6 py-4"><span class="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-bold">TRUE</span></td>
+              <td class="px-6 py-4 text-slate-500">Config</td>
+              <td class="px-6 py-4 text-center"><span class="material-symbols-outlined text-primary text-lg">toggle_on</span></td>
+            </tr>
+            <tr>
+              <td class="px-6 py-4 font-mono text-xs text-slate-700">BATCH_SIZE</td>
+              <td class="px-6 py-4 text-slate-600">20</td>
+              <td class="px-6 py-4 text-slate-500">Config</td>
+              <td class="px-6 py-4 text-center"><span class="material-symbols-outlined text-green-500 text-lg">verified</span></td>
+            </tr>
+            <tr>
+              <td class="px-6 py-4 font-mono text-xs text-slate-700">RETENTION_DAYS</td>
+              <td class="px-6 py-4 text-slate-600">120</td>
+              <td class="px-6 py-4 text-slate-500">Config</td>
+              <td class="px-6 py-4 text-center"><span class="material-symbols-outlined text-green-500 text-lg">verified</span></td>
+            </tr>
+            <tr>
+              <td class="px-6 py-4 font-mono text-xs text-slate-700">SERVICE_ACCOUNT</td>
+              <td class="px-6 py-4 font-mono text-xs text-slate-600">89152354183-compute@developer.gserviceaccount.com</td>
+              <td class="px-6 py-4 text-slate-500">GCP</td>
+              <td class="px-6 py-4 text-center"><span class="material-symbols-outlined text-green-500 text-lg">verified</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ═══ Dry Run Results ═══ -->
+    <section class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+      <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
+        <h3 class="font-bold text-slate-900 flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary">play_circle</span> Dry Run Preview
+        </h3>
+        <span id="dryrun-count" class="text-xs text-slate-500">Click "Run Dry Run" to query BigQuery</span>
+      </div>
+      <div id="dryrun-results" class="p-6">
+        <div class="text-center py-8 text-slate-400">
+          <span class="material-symbols-outlined text-4xl mb-2 block">search</span>
+          <p class="text-sm">No dry run data yet. Click <strong>"Run Dry Run"</strong> to fetch users from BigQuery.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ Execution Logs ═══ -->
+    <section class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+      <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+        <h3 class="font-bold text-slate-900">Recent Executions</h3>
+        <button id="btn-refresh-logs" class="text-sm font-bold text-primary flex items-center gap-1">
+          <span class="material-symbols-outlined text-sm">refresh</span> Refresh
+        </button>
+      </div>
+      <div class="p-0">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            <tr>
+              <th class="px-6 py-3">Timestamp (UTC)</th>
+              <th class="px-6 py-3">Mode</th>
+              <th class="px-6 py-3">Users</th>
+              <th class="px-6 py-3">Revoked</th>
+              <th class="px-6 py-3">Outcome</th>
+            </tr>
+          </thead>
+          <tbody id="logs-table-body" class="divide-y divide-slate-100 text-slate-600">
+            <tr>
+              <td colspan="5" class="px-6 py-6 text-center text-slate-400 italic text-xs">No executions yet. Run a dry run to get started.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ═══ Contacts ═══ -->
+    <section class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex items-center gap-4">
+        <div class="w-10 h-10 rounded-full bg-loreal-black flex items-center justify-center text-xs font-bold text-white flex-shrink-0">MB</div>
+        <div><h4 class="text-sm font-bold">Matthieu BUREL</h4><p class="text-[11px] text-slate-500">Architecture / GCP</p></div>
+      </div>
+      <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex items-center gap-4">
+        <div class="w-10 h-10 rounded-full bg-loreal-black flex items-center justify-center text-xs font-bold text-white flex-shrink-0">AN</div>
+        <div><h4 class="text-sm font-bold">Anes</h4><p class="text-[11px] text-slate-500">SQL / SSDS IT / Validation</p></div>
+      </div>
+      <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex items-center gap-4">
+        <div class="w-10 h-10 rounded-full bg-loreal-black flex items-center justify-center text-xs font-bold text-white flex-shrink-0">AK</div>
+        <div><h4 class="text-sm font-bold">Abdelkader</h4><p class="text-[11px] text-slate-500">Script PowerShell original</p></div>
+      </div>
+      <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex items-center gap-4">
+        <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-white flex-shrink-0">MM</div>
+        <div><h4 class="text-sm font-bold">M. MMADI</h4><p class="text-[11px] text-slate-500">Tenant Admin / Pilotage</p></div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+</div>
+
+<!-- ═══ JAVASCRIPT ═══ -->
+<script>
+const API_BASE = window.location.origin;
+
+// ── Endpoint expand/collapse ────────────────────
+document.querySelectorAll('.endpoint-toggle').forEach(toggle => {
+  toggle.addEventListener('click', () => {
+    const detail = toggle.nextElementSibling;
+    if (detail && detail.classList.contains('endpoint-detail')) {
+      detail.classList.toggle('open');
+    }
+  });
+});
+
+// ── Copy buttons ────────────────────────────────
+document.querySelectorAll('.copy-btn').forEach(btn => {
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    const pre = btn.closest('div').querySelector('pre');
+    navigator.clipboard.writeText(pre.textContent).then(() => {
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy', 1500);
+    });
+  });
+});
+
+// ── Fetch status from backend ───────────────────
+async function loadStatus() {
+  try {
+    const res = await fetch(`${API_BASE}/api/status`);
+    const data = await res.json();
+    document.getElementById('stat-retention').textContent = data.config.RETENTION_DAYS;
+    document.getElementById('stat-batch').textContent = data.config.BATCH_SIZE;
+    if (data.last_run) {
+      document.getElementById('stat-lastrun').textContent = data.last_run.timestamp.split(' ')[0];
+      document.getElementById('stat-lastrun-time').textContent = data.last_run.timestamp.split(' ')[1] + ' UTC';
+      document.getElementById('stat-identified').textContent = data.last_run.users_identified;
+      document.getElementById('stat-revoked').textContent = data.last_run.revoked;
+    }
+  } catch (e) {
+    console.log('Backend not available — using static data');
+  }
+}
+
+// ── Run dry run ─────────────────────────────────
+document.getElementById('btn-dryrun').addEventListener('click', async () => {
+  const btn = document.getElementById('btn-dryrun');
+  btn.innerHTML = '<span class="material-symbols-outlined text-sm spinner">refresh</span> Running...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/dry-run`, { method: 'POST' });
+    const data = await res.json();
+
+    if (data.status === 'ok') {
+      document.getElementById('stat-identified').textContent = data.total;
+      document.getElementById('dryrun-count').textContent = `${data.total} users identified`;
+
+      let html = `<div class="overflow-x-auto"><table class="w-full text-left text-sm">
+        <thead class="bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+          <tr><th class="px-4 py-2">Email</th><th class="px-4 py-2">Action</th></tr>
+        </thead><tbody class="divide-y divide-slate-100">`;
+
+      data.users.forEach(email => {
+        html += `<tr>
+          <td class="px-4 py-2 font-mono text-xs text-slate-700">${email}</td>
+          <td class="px-4 py-2"><span class="px-2 py-0.5 rounded bg-orange-100 text-orange-700 text-[10px] font-bold">REVOKE_PRO_LICENCE</span></td>
+        </tr>`;
+      });
+
+      if (data.total > 50) {
+        html += `<tr><td colspan="2" class="px-4 py-3 text-center text-slate-400 italic text-xs">... ${data.total - 50} more users (see CSV export)</td></tr>`;
+      }
+      html += '</tbody></table></div>';
+      document.getElementById('dryrun-results').innerHTML = html;
+
+      loadLogs();
+      loadStatus();
+    } else {
+      document.getElementById('dryrun-results').innerHTML = `<div class="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">${data.message}</div>`;
+    }
+  } catch (e) {
+    document.getElementById('dryrun-results').innerHTML = `<div class="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">Backend not reachable: ${e.message}. Start the server with <code class="bg-red-100 px-1 rounded">python api.py</code></div>`;
+  }
+
+  btn.innerHTML = '<span class="material-symbols-outlined text-sm">play_arrow</span> Run Dry Run';
+  btn.disabled = false;
+});
+
+// ── Load execution logs ─────────────────────────
+async function loadLogs() {
+  try {
+    const res = await fetch(`${API_BASE}/api/logs`);
+    const data = await res.json();
+    const tbody = document.getElementById('logs-table-body');
+
+    if (data.logs.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-6 text-center text-slate-400 italic text-xs">No executions yet.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = data.logs.map(log => {
+      const outcomeClass = log.outcome.includes('SUCCESS') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
+      return `<tr>
+        <td class="px-6 py-3 text-xs">${log.timestamp}</td>
+        <td class="px-6 py-3"><span class="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-bold">${log.mode}</span></td>
+        <td class="px-6 py-3 font-medium">${log.users_identified}</td>
+        <td class="px-6 py-3">${log.revoked}</td>
+        <td class="px-6 py-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${outcomeClass}">${log.outcome}</span></td>
+      </tr>`;
+    }).join('');
+  } catch (e) {
+    console.log('Could not load logs');
+  }
+}
+
+// ── Validate config ─────────────────────────────
+document.getElementById('btn-validate-config').addEventListener('click', async () => {
+  try {
+    const res = await fetch(`${API_BASE}/api/config/validate`);
+    const data = await res.json();
+    const tbody = document.getElementById('config-table-body');
+    tbody.innerHTML = data.variables.map(v => `<tr>
+      <td class="px-6 py-4 font-mono text-xs text-slate-700">${v.key}</td>
+      <td class="px-6 py-4 text-slate-600">${v.value || '<span class="text-slate-400 italic">Not set</span>'}</td>
+      <td class="px-6 py-4 text-slate-500">${v.source}</td>
+      <td class="px-6 py-4 text-center"><span class="material-symbols-outlined ${v.set ? 'text-green-500' : 'text-orange-400'} text-lg">${v.set ? 'verified' : 'warning'}</span></td>
+    </tr>`).join('');
+  } catch (e) {
+    console.log('Backend not available');
+  }
+});
+
+// ── Refresh button ──────────────────────────────
+document.getElementById('btn-refresh').addEventListener('click', () => { loadStatus(); loadLogs(); });
+document.getElementById('btn-refresh-logs').addEventListener('click', loadLogs);
+
+// ── Sidebar navigation ─────────────────────────
+document.querySelectorAll('[data-section]').forEach(link => {
+  link.addEventListener('click', e => {
+    e.preventDefault();
+    document.querySelectorAll('[data-section]').forEach(l => l.classList.remove('sidebar-active'));
+    link.classList.add('sidebar-active');
+  });
+});
+
+// ── Init ────────────────────────────────────────
+loadStatus();
+loadLogs();
+</script>
+
+</body>
+</html>
