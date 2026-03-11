@@ -38,7 +38,7 @@ package-lock.json
 A Organiser/
 2026_02_16/
 
-# Dossiers hors scope du dépôt GitHub (conserver uniquement PowerBI_COE/ et CLAUDE.md)
+# Dossiers hors scope du dépôt GitHub (conserver uniquement PowerBI_COE/, Auto_Licence_Clean/ et CLAUDE.md)
 .claude/
 Dashboard/
 Documentation/

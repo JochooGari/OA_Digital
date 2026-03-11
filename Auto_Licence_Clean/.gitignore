@@ -1,0 +1,12 @@
+# Secrets
+.env
+output/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# IDE
+.vscode/
+.idea/
