@@ -240,6 +240,76 @@ Host github.com
 
 ---
 
+## Reprise sur nouveau PC / changement de machine
+
+> Mohcine travaille en mode mobile : **PC portable L'Oréal** au bureau, **PC fixe** à la maison (plus puissant).
+> Cette section permet de reprendre le travail rapidement sur n'importe quelle machine.
+
+### Étape 1 — Cloner le repo (si pas déjà fait)
+
+```bash
+git clone https://github.com/JochooGari/OA_Digital.git "OA Digital"
+cd "OA Digital"
+```
+
+### Étape 2 — Configurer les remotes git
+
+```bash
+# Remote perso (déjà dans origin si cloné depuis JochooGari)
+git remote -v
+
+# Ajouter le remote pro L'Oréal (si absent)
+git remote add loreal git@github.com:mmadi-oa/auto-licence-clean.git
+```
+
+### Étape 3 — Configurer la clé SSH
+
+La clé SSH `loreal_ed25519` doit être présente sur la machine. Si absente :
+1. Copier `~/.ssh/loreal_ed25519` et `~/.ssh/loreal_ed25519.pub` depuis l'autre PC (via clé USB ou gestionnaire de mots de passe)
+2. Créer/compléter `~/.ssh/config` :
+
+```
+Host github.com
+    HostName github.com
+    User git
+    AddKeysToAgent yes
+    IdentityFile ~/.ssh/loreal_ed25519
+```
+
+3. Tester la connexion : `ssh -T git@github.com`
+
+### Étape 4 — Installer les outils nécessaires
+
+| Outil | Usage | Commande d'install |
+|-------|-------|--------------------|
+| Python 3.11+ | Auto Licence Clean | `winget install Python.Python.3.11` |
+| Claude Code | Extension VSCode/Cursor | Marketplace VSCode |
+| Google Cloud CLI | GCP / BigQuery | `winget install Google.CloudSDK` |
+| PowerShell 7+ | Stress test | Déjà présent sur Windows |
+
+### Étape 5 — Variables d'environnement Python
+
+```bash
+cd Auto_Licence_Clean
+cp .env.example .env
+# Remplir les valeurs dans .env (demander à Matthieu / Anes)
+```
+
+### Commandes quotidiennes
+
+```bash
+# Récupérer les dernières modifs
+git pull origin main
+
+# Pusher les modifs vers les deux repos
+git add <fichiers>
+git commit -m "message"
+git push origin main                                          # perso JochooGari
+git subtree push --prefix=Auto_Licence_Clean loreal developer # pro L'Oréal
+```
+
+---
+
 ## Préférences et conventions
 
 - Langue de travail : **français** pour les échanges, **anglais** pour le code
