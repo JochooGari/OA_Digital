@@ -56,5 +56,12 @@ webapp/
 extractions_raw.sql
 
 # Secrets — ne jamais committer
+.mcp.json
+Auto_Licence_Clean/.env
 PowerBI_COE/Auto Licence Cleaning/auto_clean_licences/.env
 PowerBI_COE/Auto Licence Cleaning/auto_clean_licences/output/
+
+# Documents sensibles et données runtime
+*.docx
+*.doc
+Auto_Licence_Clean/data/

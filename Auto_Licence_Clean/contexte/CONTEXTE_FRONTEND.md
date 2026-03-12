@@ -19,7 +19,7 @@
 | Composant | Technologie | Notes |
 |-----------|-------------|-------|
 | Frontend | HTML + Tailwind CSS (CDN) + vanilla JS | Fichier unique `index.html` |
-| Backend | Flask (Python) | `api.py` — sert le front + expose les endpoints |
+| Backend | **FastAPI** (Python) | `api.py` — sert le front + expose les endpoints |
 | BDD source | BigQuery (GCP) | Table `license_pro_users_v1` |
 | API externe | BTDP Groups API (L'Oreal) | DELETE /groups/{email}/members |
 | Auth | Google OAuth2 (ADC) | `gcloud auth application-default login` en local |
@@ -29,22 +29,31 @@
 ## 3. Structure des fichiers
 
 ```
-Auto_Licence_Clean/
+auto-licence-clean/
+├── contexte/
+│   └── CONTEXTE_FRONTEND.md  ← CE FICHIER
+├── docker/
+│   └── Dockerfile            ← Image Docker (python:3.12-slim)
 ├── docs/
-│   ├── index.html          ← PAGE PRINCIPALE (Tailwind CSS, tout-en-un)
-│   ├── style.css           ← ancien CSS vanilla (non utilise par index.html)
-│   ├── app.js              ← ancien JS vanilla (non utilise par index.html)
-│   └── PRD_FRONTEND.md     ← PRD original
+│   ├── index.html            ← PAGE PRINCIPALE (Tailwind CSS, tout-en-un)
+│   ├── style.css             ← ancien CSS vanilla (non utilise par index.html)
+│   ├── app.js                ← ancien JS vanilla (non utilise par index.html)
+│   └── PRD_FRONTEND.md       ← PRD original
+├── sql/
+│   └── licence_pro_usage.sql ← Requete SQL BigQuery
 ├── src/
-│   ├── api.py              ← BACKEND FLASK (sert le front + API)
-│   ├── main.py             ← orchestrateur batch (Cloud Run Job)
-│   ├── config.py           ← variables d'environnement
-│   ├── bigquery_client.py  ← requete SQL BigQuery
-│   ├── groups_api_client.py ← appels BTDP Groups API (Google OAuth2)
-│   └── reporter.py         ← export CSV
-├── .env                    ← variables locales (NE PAS COMMITTER)
-├── .env.example            ← template des variables
-└── requirements.txt        ← dependances Python
+│   ├── api.py                ← BACKEND FASTAPI (sert le front + API)
+│   ├── main.py               ← orchestrateur batch (Cloud Run Job)
+│   ├── config.py             ← variables d'environnement
+│   ├── bigquery_client.py    ← requete SQL BigQuery
+│   ├── groups_api_client.py  ← appels BTDP Groups API (Google OAuth2)
+│   └── reporter.py           ← export CSV
+├── .env                      ← variables locales (NE PAS COMMITTER)
+├── .env.example              ← template des variables
+├── .gitignore
+├── deploy.sh                 ← deploiement Cloud Run + Scheduler (BTDP naming)
+├── README.md
+└── requirements.txt          ← dependances Python
 ```
 
 ---
@@ -89,25 +98,33 @@ Auto_Licence_Clean/
 
 ---
 
-## 5. Backend Flask (api.py)
+## 5. Backend FastAPI (api.py)
+
+### Migration Flask → FastAPI
+Le backend a ete migre de Flask vers **FastAPI** pour respecter les preconisations BTDP Framework (FastAPI est le standard pour les APIs sur la plateforme).
 
 ### Endpoints
 
 | Route | Methode | Description | Necessite BigQuery |
 |-------|---------|-------------|-------------------|
 | `/` | GET | Sert `index.html` | Non |
+| `/health` | GET | **Health check (standard BTDP Cloud Run)** | Non |
 | `/api/status` | GET | Config actuelle + dernier run | Non |
 | `/api/users` | GET | Liste complete des emails (BigQuery) | Oui |
 | `/api/count` | GET | Nombre d'utilisateurs seulement | Oui |
 | `/api/dry-run` | POST | Dry run complet + export CSV | Oui |
 | `/api/logs` | GET | Historique des executions (in-memory) | Non |
+| `/api/auth/status` | GET | Verifie si les credentials Google ADC sont configurees | Non |
+| `/api/auth/login` | POST | Lance `gcloud auth application-default login` (ouvre navigateur) | Non |
 | `/api/config/validate` | GET | Statut de chaque variable d'env | Non |
 
 ### Demarrage
 ```bash
-cd Auto_Licence_Clean/src
-../.venv/Scripts/python api.py    # Windows
-# ou: ../.venv/bin/python api.py  # Linux/Mac
+cd auto-licence-clean/src
+uvicorn api:app --reload --port 5000
+
+# ou directement :
+python api.py
 ```
 
 Le serveur demarre sur `http://localhost:5000`.
@@ -163,7 +180,29 @@ Service account GCP : `89152354183-compute@developer.gserviceaccount.com`
 
 ---
 
-## 8. Ce qui reste a faire
+## 8. Deploiement (BTDP naming conventions)
+
+### Naming des ressources GCP
+| Ressource | Nom BTDP |
+|-----------|----------|
+| Cloud Run Job | `autoclean-gcr-main-ew1-np` |
+| Cloud Scheduler | `autoclean-gsc-daily-ew1-np` |
+| Artifact Registry | `autoclean-gar-images-ew1-np` |
+| Service Account | `autoclean-sa-runner-np` |
+
+### Docker
+- Image : `europe-west1-docker.pkg.dev/{PROJECT}/autoclean-gar-images-ew1-np/auto-licence-clean`
+- Base : `python:3.12-slim`
+- Deux modes :
+  - **Batch** (Cloud Run Job) : `CMD ["python", "src/main.py"]`
+  - **Dashboard** : `uvicorn src.api:app --host 0.0.0.0 --port $PORT`
+
+### Script : `deploy.sh`
+Deploie Cloud Run Job + Cloud Scheduler avec les conventions BTDP (Artifact Registry, naming, Europe-West1).
+
+---
+
+## 9. Ce qui reste a faire
 
 ### Frontend
 - [ ] Afficher un message d'erreur user-friendly quand les credentials Google ne sont pas configurees
@@ -175,35 +214,54 @@ Service account GCP : `89152354183-compute@developer.gserviceaccount.com`
 ### Backend
 - [ ] Persister l'historique des executions (actuellement in-memory, perdu au restart)
 - [ ] Ajouter un endpoint pour telecharger le CSV dry-run
-- [ ] Ajouter un health check endpoint `/api/health`
 
 ### Infra / Acces
 - [ ] Obtenir `PRO_LICENSE_GROUP_EMAIL` aupres d'Anes
 - [ ] Ajouter le service account comme invoker de la Groups API (Service Request BTDP)
 - [ ] Ajouter le service account comme owner du groupe licence Pro
-- [ ] Activer Secret Manager API sur `oa-data-coepowerbi-np` (bloque — demande a Matthieu)
+- [ ] Ouvrir une SR ServiceNow "BTDP GCP Project Creation Request" pour creer le projet GCP + repo officiel
+- [ ] Demander invitation a l'org `loreal-datafactory` (contacter Arnaud BAKOULA ou Mathieu DEBON)
 
 ---
 
-## 9. Historique des decisions
+## 10. Historique des decisions
 
 | Decision | Raison |
 |----------|--------|
 | Tailwind CSS via CDN | Pas de build tool, ouvrable directement dans le navigateur |
 | JS inline dans index.html | Simplicite, pas de bundler |
-| Flask pour le backend | Leger, deja utilise dans l'ecosysteme BTDP |
+| **FastAPI** pour le backend | **Standard BTDP Framework** — remplace Flask (migration faite) |
 | Google OAuth2 (ADC) au lieu de Azure client_id/secret | Documentation BTDP confirme que depuis GCP, un token Google suffit |
 | Pas de framework JS (React/Vue) | Prototype V1, complexite minimale |
 | Contacts supprimes du front | Demande du client |
+| Endpoint `/health` ajoute | Standard BTDP pour Cloud Run |
+| Artifact Registry au lieu de gcr.io | Recommandation BTDP (gcr.io deprecie) |
+| Naming GCP `autoclean-gcr-main-ew1-np` | Convention BTDP : `app-trigram-name-region-env` |
 
 ---
 
-## 10. Comment lancer le projet
+## 11. Git & Repository
+
+### Repository
+- **URL** : https://github.com/mmadi-oa/auto-licence-clean
+- **Organisation cible** : `loreal-datafactory` (en attente d'invitation)
+- **Branche par defaut** : `develop`
+- **Branches** : `master` (production), `develop` (integration)
+
+### Conventions Git BTDP
+- **Branch naming** : `feat/BTDP-XXX/description`, `bugfix/BTDP-XXX/description`
+- **Commit messages** : `[BTDP-XXX](tag) Description` — tags: feat, bugfix, update, refactor, doc, test, ci, debt
+- **Workflow** : Squash & Merge via PR sur `develop`
+- **Commits signes** : GPG obligatoire (`commit.gpgsign = true`)
+
+---
+
+## 12. Comment lancer le projet
 
 ```bash
 # 1. Cloner le repo
-git clone https://github.com/JochooGari/OA_Digital.git
-cd OA_Digital/Auto_Licence_Clean
+git clone git@github.com:mmadi-oa/auto-licence-clean.git
+cd auto-licence-clean
 
 # 2. Creer l'environnement virtuel
 python -m venv .venv
@@ -223,7 +281,7 @@ gcloud auth application-default login
 
 # 7. Lancer le serveur
 cd src
-python api.py
+uvicorn api:app --reload --port 5000
 
 # 8. Ouvrir http://localhost:5000
 ```

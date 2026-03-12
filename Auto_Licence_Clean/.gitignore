@@ -2,6 +2,9 @@
 .env
 output/
 
+# Runtime data (schedule, execution history)
+data/*.json
+
 # Python
 .venv/
 __pycache__/

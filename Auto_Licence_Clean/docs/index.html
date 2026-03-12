@@ -26,144 +26,359 @@
   </script>
   <style>
     body { font-family: 'Inter', sans-serif; }
-    .sidebar-active { @apply bg-primary/10 border-r-2 border-primary text-primary; }
+    .nav-active { color: #c5a86d !important; }
     .endpoint-detail { display: none; }
     .endpoint-detail.open { display: block; }
     .loading { opacity: 0.5; pointer-events: none; }
     .spinner { animation: spin 1s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
+    .toggle-switch { position: relative; width: 44px; height: 24px; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider { position: absolute; cursor: pointer; inset: 0; background: #cbd5e1; border-radius: 9999px; transition: 0.3s; }
+    .toggle-slider::before { content: ""; position: absolute; height: 18px; width: 18px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s; }
+    .toggle-switch input:checked + .toggle-slider { background: #c5a86d; }
+    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); }
+    .faq-detail { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+    .faq-detail.open { max-height: 600px; }
+    html { scroll-behavior: smooth; }
   </style>
 </head>
 <body class="bg-background-light text-slate-900 font-display">
 
 <!-- ═══ HEADER ═══ -->
-<header class="fixed top-0 z-50 w-full h-16 bg-loreal-black flex items-center justify-between px-6 border-b border-white/10">
-  <div class="flex items-center gap-6">
-    <div class="flex items-center gap-3">
-      <div class="bg-white p-1 rounded-sm">
-        <svg class="w-8 h-8 text-black" fill="none" viewBox="0 0 48 48"><path d="M6 6H42L36 24L42 42H6L12 24L6 6Z" fill="currentColor"/></svg>
-      </div>
-      <h1 class="text-white font-bold tracking-tight text-lg uppercase">L'OREAL <span class="font-normal text-slate-400 ml-2">| Auto Licence Clean</span></h1>
+<header class="fixed top-0 z-50 w-full h-14 bg-loreal-black border-b border-white/10 flex items-center justify-between px-4">
+  <!-- Logo -->
+  <div class="flex items-center gap-3 flex-shrink-0">
+    <div class="bg-white p-1 rounded-sm">
+      <svg class="w-6 h-6 text-black" fill="none" viewBox="0 0 48 48"><path d="M6 6H42L36 24L42 42H6L12 24L6 6Z" fill="currentColor"/></svg>
     </div>
+    <h1 class="text-white font-bold tracking-tight text-base uppercase">L'OREAL <span class="font-normal text-slate-400 ml-1">| Auto Licence Clean</span></h1>
   </div>
-  <div class="flex items-center gap-4">
-    <div class="flex gap-2">
-      <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-green-500/20 text-green-400 border border-green-500/30">Live</span>
-      <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-orange-500/20 text-orange-400 border border-orange-500/30">Pre-Prod</span>
-      <span id="header-dryrun-badge" class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-primary/20 text-primary border border-primary/30">DRY_RUN: ACTIVE</span>
-    </div>
-    <div class="h-8 w-px bg-white/10 mx-2"></div>
-    <button class="p-2 text-slate-400 hover:text-white transition-colors"><span class="material-symbols-outlined">notifications</span></button>
-    <button class="p-2 text-slate-400 hover:text-white transition-colors"><span class="material-symbols-outlined">settings</span></button>
-    <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-white">MM</div>
+  <!-- Navigation -->
+  <nav class="flex items-center gap-1">
+    <a href="#section-execution" data-nav="execution" class="nav-link nav-active px-3 py-1.5 text-sm font-bold uppercase tracking-wider text-slate-400 hover:text-primary transition-all flex items-center gap-1.5">
+      <span class="material-symbols-outlined text-[18px]">rocket_launch</span> Execution
+    </a>
+    <a href="#section-configuration" data-nav="configuration" class="nav-link px-3 py-1.5 text-sm font-bold uppercase tracking-wider text-slate-400 hover:text-primary transition-all flex items-center gap-1.5">
+      <span class="material-symbols-outlined text-[18px]">tune</span> Configuration
+    </a>
+    <a href="#section-api" data-nav="api" class="nav-link px-3 py-1.5 text-sm font-bold uppercase tracking-wider text-slate-400 hover:text-primary transition-all flex items-center gap-1.5">
+      <span class="material-symbols-outlined text-[18px]">api</span> API
+    </a>
+    <a href="#section-architecture" data-nav="architecture" class="nav-link px-3 py-1.5 text-sm font-bold uppercase tracking-wider text-slate-400 hover:text-primary transition-all flex items-center gap-1.5">
+      <span class="material-symbols-outlined text-[18px]">schema</span> Architecture
+    </a>
+    <a href="#section-faq" data-nav="faq" class="nav-link px-3 py-1.5 text-sm font-bold uppercase tracking-wider text-slate-400 hover:text-primary transition-all flex items-center gap-1.5">
+      <span class="material-symbols-outlined text-[18px]">help</span> FAQ
+    </a>
+  </nav>
+  <!-- DRY_RUN badge -->
+  <div class="flex-shrink-0">
+    <span id="header-dryrun-badge" class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-primary/20 text-primary border border-primary/30">DRY_RUN: ACTIVE</span>
   </div>
 </header>
 
-<div class="flex pt-16 h-screen overflow-hidden">
-
-<!-- ═══ SIDEBAR ═══ -->
-<aside class="w-64 flex-shrink-0 bg-white border-r border-slate-200 flex flex-col">
-  <nav class="flex-1 py-6 space-y-8">
-    <div>
-      <h3 class="px-6 text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">Overview</h3>
-      <div class="space-y-1">
-        <a class="flex items-center gap-3 px-6 py-2.5 text-sm font-medium sidebar-active" href="#" data-section="dashboard">
-          <span class="material-symbols-outlined text-[20px]">dashboard</span> Status
-        </a>
-        <a class="flex items-center gap-3 px-6 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all" href="#" data-section="config">
-          <span class="material-symbols-outlined text-[20px]">tune</span> Configuration
-        </a>
-      </div>
-    </div>
-    <div>
-      <h3 class="px-6 text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">API Endpoints</h3>
-      <div class="space-y-1">
-        <a class="flex items-center gap-3 px-6 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all" href="#" data-section="bigquery">
-          <span class="material-symbols-outlined text-[20px]">database</span> BigQuery
-        </a>
-        <a class="flex items-center gap-3 px-6 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all" href="#" data-section="groups-api">
-          <span class="material-symbols-outlined text-[20px]">group</span> Groups API
-        </a>
-      </div>
-    </div>
-    <div>
-      <h3 class="px-6 text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">Architecture</h3>
-      <div class="space-y-1">
-        <a class="flex items-center gap-3 px-6 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all" href="#" data-section="architecture">
-          <span class="material-symbols-outlined text-[20px]">schema</span> Diagram
-        </a>
-      </div>
-    </div>
-    <div>
-      <h3 class="px-6 text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">Execution</h3>
-      <div class="space-y-1">
-        <a class="flex items-center gap-3 px-6 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all" href="#" data-section="dryrun">
-          <span class="material-symbols-outlined text-[20px]">play_circle</span> Dry Run
-        </a>
-        <a class="flex items-center gap-3 px-6 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all" href="#" data-section="logs">
-          <span class="material-symbols-outlined text-[20px]">list_alt</span> Logs
-        </a>
-      </div>
-    </div>
-  </nav>
-  <div class="p-6 border-t border-slate-200">
-    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-tight">BTDP Groups API v2.4.1</p>
-  </div>
-</aside>
-
 <!-- ═══ MAIN CONTENT ═══ -->
-<main class="flex-1 overflow-y-auto bg-slate-50 p-8">
-  <div class="max-w-6xl mx-auto space-y-8">
+<main class="pt-[64px] bg-slate-50 min-h-screen">
+  <div class="max-w-7xl mx-auto px-4 py-8 space-y-10">
 
-    <!-- Page Title -->
-    <div class="flex items-end justify-between">
-      <div>
-        <h2 class="text-3xl font-black text-slate-900 tracking-tight">Dashboard Overview</h2>
-        <p class="text-slate-500 mt-1">Monitoring automated license cleanup across BTDP environments.</p>
+    <!-- Auth Banners -->
+    <div id="auth-banner" class="hidden bg-orange-50 border border-orange-200 rounded-xl p-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="material-symbols-outlined text-orange-500 text-2xl">warning</span>
+        <div>
+          <p class="text-sm font-bold text-orange-800">Google credentials not configured</p>
+          <p class="text-xs text-orange-600">BigQuery queries require authentication. Click the button to login with your Google account.</p>
+        </div>
       </div>
-      <div class="flex gap-3">
-        <button id="btn-refresh" class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-slate-50 transition-all">
-          <span class="material-symbols-outlined text-sm">refresh</span> Refresh
+      <div class="flex gap-2">
+        <button id="btn-auth-login" class="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-orange-600 transition-all">
+          <span class="material-symbols-outlined text-sm">login</span> Login with Google
         </button>
-        <button id="btn-count" class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
-          <span class="material-symbols-outlined text-sm">database</span> Query BigQuery
+        <button id="btn-auth-check" class="px-3 py-2 bg-white border border-orange-200 rounded-lg text-sm font-bold text-orange-700 flex items-center gap-2 hover:bg-orange-50 transition-all">
+          <span class="material-symbols-outlined text-sm">refresh</span> Check
         </button>
       </div>
     </div>
-
-    <!-- ═══ Status Cards ═══ -->
-    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Last Run</p>
-        <h3 id="stat-lastrun" class="text-lg font-bold text-slate-900">--</h3>
-        <p id="stat-lastrun-time" class="text-xs text-slate-500">--</p>
-      </div>
-      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Identified</p>
-        <h3 id="stat-identified" class="text-3xl font-black text-primary">--</h3>
-        <p class="text-xs text-slate-500">Inactive accounts</p>
-      </div>
-      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Revoked</p>
-        <h3 id="stat-revoked" class="text-3xl font-black text-slate-900">0</h3>
-        <p class="text-xs text-primary font-medium italic">Dry-run active</p>
-      </div>
-      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Retention</p>
-        <h3 id="stat-retention" class="text-3xl font-black text-slate-900">120</h3>
-        <p class="text-xs text-slate-500">Days policy</p>
-      </div>
-      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Batch Size</p>
-        <h3 id="stat-batch" class="text-3xl font-black text-slate-900">20</h3>
-        <p class="text-xs text-slate-500">Per API call</p>
+    <div id="auth-ok-banner" class="hidden bg-green-50 border border-green-200 rounded-xl p-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="material-symbols-outlined text-green-500 text-2xl">check_circle</span>
+        <div>
+          <p class="text-sm font-bold text-green-800">Google credentials active</p>
+          <p id="auth-account" class="text-xs text-green-600">Ready to query BigQuery</p>
+        </div>
       </div>
     </div>
 
-    <!-- ═══ Two columns: Endpoints + Architecture ═══ -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- SECTION 1: EXECUTION                          -->
+    <!-- ══════════════════════════════════════════════ -->
+    <div id="section-execution" class="scroll-mt-[72px] space-y-8">
+      <div class="flex items-end justify-between">
+        <div>
+          <h2 class="text-3xl font-black text-slate-900 tracking-tight">Execution</h2>
+          <p class="text-slate-500 mt-1">Identify inactive users and manage licence revocation.</p>
+        </div>
+        <div class="flex gap-3">
+          <button id="btn-refresh" class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-slate-50 transition-all">
+            <span class="material-symbols-outlined text-sm">refresh</span> Refresh
+          </button>
+          <button id="btn-count" class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
+            <span class="material-symbols-outlined text-sm">database</span> Query BigQuery
+          </button>
+        </div>
+      </div>
 
-      <!-- API Endpoints -->
+      <!-- Status Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Last Run</p>
+          <h3 id="stat-lastrun" class="text-lg font-bold text-slate-900">--</h3>
+          <p id="stat-lastrun-time" class="text-xs text-slate-500">--</p>
+        </div>
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Identified</p>
+          <h3 id="stat-identified" class="text-3xl font-black text-primary">--</h3>
+          <p class="text-xs text-slate-500">Inactive accounts</p>
+        </div>
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Revoked</p>
+          <h3 id="stat-revoked" class="text-3xl font-black text-slate-900">0</h3>
+          <p class="text-xs text-primary font-medium italic">Dry-run active</p>
+        </div>
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Retention</p>
+          <h3 id="stat-retention" class="text-3xl font-black text-slate-900">120</h3>
+          <p class="text-xs text-slate-500">Days policy</p>
+        </div>
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Batch Size</p>
+          <h3 id="stat-batch" class="text-3xl font-black text-slate-900">20</h3>
+          <p class="text-xs text-slate-500">Per API call</p>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <section class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+        <div class="px-6 py-4 border-b border-slate-200 bg-slate-50/50">
+          <h3 class="font-bold text-slate-900 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">rocket_launch</span> Actions
+          </h3>
+        </div>
+        <div class="p-6 flex flex-wrap gap-4 items-start">
+          <div class="flex-1 min-w-[250px]">
+            <h4 class="text-sm font-bold text-slate-700 mb-2">Preview (Dry Run)</h4>
+            <p class="text-xs text-slate-500 mb-3">Lance la requete BigQuery et exporte un fichier CSV sans supprimer aucun utilisateur.</p>
+            <button id="btn-dryrun" class="px-5 py-2.5 bg-primary text-white rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-primary/90 transition-all">
+              <span class="material-symbols-outlined text-sm">play_circle</span> Lancer Dry Run
+            </button>
+          </div>
+          <div class="w-px bg-slate-200 self-stretch hidden md:block"></div>
+          <div class="flex-1 min-w-[250px]">
+            <h4 class="text-sm font-bold text-red-700 mb-2 flex items-center gap-1">
+              <span class="material-symbols-outlined text-sm">warning</span> Suppression
+            </h4>
+            <p class="text-xs text-slate-500 mb-3">Supprime les utilisateurs inactifs du groupe de licence Pro via l'API Groups.</p>
+            <button id="btn-revoke" class="px-5 py-2.5 bg-red-600 text-white rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-red-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed" title="DRY_RUN doit etre desactive pour executer">
+              <span class="material-symbols-outlined text-sm">delete_sweep</span> Executer la suppression
+            </button>
+            <p id="revoke-dryrun-warning" class="text-[10px] text-orange-600 mt-2 flex items-center gap-1">
+              <span class="material-symbols-outlined text-xs">info</span> DRY_RUN est actif — la suppression est desactivee.
+            </p>
+          </div>
+        </div>
+        <div id="execution-result" class="hidden px-6 pb-6"></div>
+      </section>
+
+      <!-- Dry Run Results -->
+      <section class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+        <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
+          <h3 class="font-bold text-slate-900 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">play_circle</span> Dry Run Preview
+          </h3>
+          <span id="dryrun-count" class="text-xs text-slate-500">Click "Query BigQuery" to get a count</span>
+        </div>
+        <div id="dryrun-results" class="p-6">
+          <div class="text-center py-8 text-slate-400">
+            <span class="material-symbols-outlined text-4xl mb-2 block">search</span>
+            <p class="text-sm">No dry run data yet. Click <strong>"Lancer Dry Run"</strong> or <strong>"Query BigQuery"</strong> to fetch users.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- History + Logs -->
+      <section class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+        <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+          <h3 class="font-bold text-slate-900 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">history</span> Historique des executions
+          </h3>
+          <button id="btn-refresh-logs" class="text-sm font-bold text-primary flex items-center gap-1">
+            <span class="material-symbols-outlined text-sm">refresh</span> Refresh
+          </button>
+        </div>
+        <div class="grid grid-cols-3 gap-4 p-6 border-b border-slate-200">
+          <div class="text-center">
+            <p class="text-2xl font-black text-slate-900" id="history-total-runs">0</p>
+            <p class="text-xs text-slate-500">Total Executions</p>
+          </div>
+          <div class="text-center">
+            <p class="text-2xl font-black text-primary" id="history-total-identified">0</p>
+            <p class="text-xs text-slate-500">Total Identified</p>
+          </div>
+          <div class="text-center">
+            <p class="text-2xl font-black text-slate-900" id="history-total-revoked">0</p>
+            <p class="text-xs text-slate-500">Total Revoked</p>
+          </div>
+        </div>
+        <div class="px-6 py-3 bg-blue-50 border-b border-blue-100">
+          <p class="text-xs text-blue-700 flex items-center gap-1">
+            <span class="material-symbols-outlined text-sm">info</span>
+            Les adresses email ne sont pas affichees ici. Consultez la section <a href="#section-faq" class="underline font-bold">FAQ</a> pour la requete BigQuery.
+          </p>
+        </div>
+        <div class="p-0">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              <tr>
+                <th class="px-6 py-3">Timestamp (UTC)</th>
+                <th class="px-6 py-3">Mode</th>
+                <th class="px-6 py-3">Trigger</th>
+                <th class="px-6 py-3">Users</th>
+                <th class="px-6 py-3">Revoked</th>
+                <th class="px-6 py-3">Outcome</th>
+              </tr>
+            </thead>
+            <tbody id="logs-table-body" class="divide-y divide-slate-100 text-slate-600">
+              <tr>
+                <td colspan="6" class="px-6 py-6 text-center text-slate-400 italic text-xs">No executions yet. Run a dry run to get started.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- SECTION 2: CONFIGURATION                      -->
+    <!-- ══════════════════════════════════════════════ -->
+    <div id="section-configuration" class="scroll-mt-[72px] space-y-8">
+      <h2 class="text-3xl font-black text-slate-900 tracking-tight">Configuration</h2>
+
+      <!-- Scheduling -->
+      <section class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+        <div class="px-6 py-4 border-b border-slate-200 bg-slate-50/50">
+          <h3 class="font-bold text-slate-900 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">schedule</span> Programmation automatique
+          </h3>
+        </div>
+        <div class="p-6 space-y-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-bold text-slate-700">Activer la programmation</p>
+              <p class="text-xs text-slate-500">Le nettoyage s'executera automatiquement selon la frequence choisie.</p>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="schedule-enabled"/>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Frequence</label>
+              <select id="schedule-frequency" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-primary focus:border-primary">
+                <option value="monthly_last_day">Dernier jour du mois (recommande)</option>
+                <option value="monthly_first">Premier jour du mois</option>
+                <option value="weekly_monday">Chaque lundi</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Heure (UTC)</label>
+              <input type="time" id="schedule-time" value="02:00" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-primary focus:border-primary"/>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Expression Cron</label>
+              <div id="schedule-cron" class="w-full bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 text-sm font-mono text-slate-600">0 2 L * *</div>
+            </div>
+          </div>
+          <div class="flex items-center justify-between pt-2">
+            <div class="flex items-center gap-2">
+              <span id="schedule-sync-icon" class="material-symbols-outlined text-orange-400 text-lg">cloud_off</span>
+              <span id="schedule-sync-text" class="text-xs text-slate-500">Cloud Scheduler : Non synchronise (credentials en attente)</span>
+            </div>
+            <button id="btn-save-schedule" class="px-5 py-2 bg-primary text-white rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-primary/90 transition-all">
+              <span class="material-symbols-outlined text-sm">save</span> Enregistrer
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Environment Variables -->
+      <section class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+        <div class="px-6 py-4 border-b border-slate-200 bg-slate-50/50 flex items-center justify-between">
+          <h3 class="font-bold text-slate-900">Environment Variables</h3>
+          <button id="btn-validate-config" class="text-xs font-bold text-primary flex items-center gap-1 hover:underline">
+            <span class="material-symbols-outlined text-sm">verified</span> Validate Config
+          </button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead>
+              <tr class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold tracking-wider">
+                <th class="px-6 py-3">Variable Key</th>
+                <th class="px-6 py-3">Current Value</th>
+                <th class="px-6 py-3">Source</th>
+                <th class="px-6 py-3 text-center">Status</th>
+              </tr>
+            </thead>
+            <tbody id="config-table-body" class="divide-y divide-slate-100">
+              <tr>
+                <td class="px-6 py-4 font-mono text-xs text-slate-700">BIGQUERY_BILLING_PROJECT</td>
+                <td class="px-6 py-4 text-slate-600">oa-data-coepowerbi-np</td>
+                <td class="px-6 py-4 text-slate-500">Matthieu</td>
+                <td class="px-6 py-4 text-center"><span class="material-symbols-outlined text-green-500 text-lg">verified</span></td>
+              </tr>
+              <tr>
+                <td class="px-6 py-4 font-mono text-xs text-slate-700">PRO_LICENSE_GROUP_EMAIL</td>
+                <td class="px-6 py-4 text-slate-400 italic">En attente</td>
+                <td class="px-6 py-4 text-slate-500">Anes</td>
+                <td class="px-6 py-4 text-center"><span class="material-symbols-outlined text-orange-400 text-lg">warning</span></td>
+              </tr>
+              <tr>
+                <td class="px-6 py-4 font-mono text-xs text-slate-700">DRY_RUN</td>
+                <td class="px-6 py-4"><span class="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-bold">TRUE</span></td>
+                <td class="px-6 py-4 text-slate-500">Config</td>
+                <td class="px-6 py-4 text-center"><span class="material-symbols-outlined text-primary text-lg">toggle_on</span></td>
+              </tr>
+              <tr>
+                <td class="px-6 py-4 font-mono text-xs text-slate-700">BATCH_SIZE</td>
+                <td class="px-6 py-4 text-slate-600">20</td>
+                <td class="px-6 py-4 text-slate-500">Config</td>
+                <td class="px-6 py-4 text-center"><span class="material-symbols-outlined text-green-500 text-lg">verified</span></td>
+              </tr>
+              <tr>
+                <td class="px-6 py-4 font-mono text-xs text-slate-700">RETENTION_DAYS</td>
+                <td class="px-6 py-4 text-slate-600">120</td>
+                <td class="px-6 py-4 text-slate-500">Config</td>
+                <td class="px-6 py-4 text-center"><span class="material-symbols-outlined text-green-500 text-lg">verified</span></td>
+              </tr>
+              <tr>
+                <td class="px-6 py-4 font-mono text-xs text-slate-700">SERVICE_ACCOUNT</td>
+                <td class="px-6 py-4 font-mono text-xs text-slate-600">89152354183-compute@developer.gserviceaccount.com</td>
+                <td class="px-6 py-4 text-slate-500">GCP</td>
+                <td class="px-6 py-4 text-center"><span class="material-symbols-outlined text-green-500 text-lg">verified</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- SECTION 3: API ENDPOINTS                      -->
+    <!-- ══════════════════════════════════════════════ -->
+    <div id="section-api" class="scroll-mt-[72px] space-y-8">
+      <h2 class="text-3xl font-black text-slate-900 tracking-tight">API Endpoints</h2>
+
       <section class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
         <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
           <h3 class="font-bold text-slate-900 flex items-center gap-2">
@@ -249,16 +464,22 @@
 
         </div>
       </section>
+    </div>
 
-      <!-- Architecture Diagram -->
-      <section class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col">
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- SECTION 4: ARCHITECTURE                       -->
+    <!-- ══════════════════════════════════════════════ -->
+    <div id="section-architecture" class="scroll-mt-[72px] space-y-8">
+      <h2 class="text-3xl font-black text-slate-900 tracking-tight">Architecture</h2>
+
+      <section class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
         <div class="flex items-center justify-between mb-6">
           <h3 class="font-bold text-slate-900 flex items-center gap-2">
             <span class="material-symbols-outlined text-primary">account_tree</span> System Architecture
           </h3>
           <span class="text-[10px] bg-slate-100 px-2 py-1 rounded text-slate-500">GCP CLOUD NATIVE</span>
         </div>
-        <div class="flex-1 flex flex-col items-center justify-center gap-6 py-4">
+        <div class="flex flex-col items-center justify-center gap-6 py-4">
           <div class="px-4 py-3 bg-slate-800 rounded-lg text-white text-xs font-bold flex items-center gap-3 border border-slate-700 shadow-md">
             <span class="material-symbols-outlined text-blue-400">schedule</span> Cloud Scheduler (02h00)
           </div>
@@ -283,118 +504,118 @@
           </p>
         </div>
       </section>
-
     </div>
 
-    <!-- ═══ Configuration Table ═══ -->
-    <section class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-      <div class="px-6 py-4 border-b border-slate-200 bg-slate-50/50 flex items-center justify-between">
-        <h3 class="font-bold text-slate-900">Environment Variables</h3>
-        <button id="btn-validate-config" class="text-xs font-bold text-primary flex items-center gap-1 hover:underline">
-          <span class="material-symbols-outlined text-sm">verified</span> Validate Config
-        </button>
-      </div>
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-sm">
-          <thead>
-            <tr class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold tracking-wider">
-              <th class="px-6 py-3">Variable Key</th>
-              <th class="px-6 py-3">Current Value</th>
-              <th class="px-6 py-3">Source</th>
-              <th class="px-6 py-3 text-center">Status</th>
-            </tr>
-          </thead>
-          <tbody id="config-table-body" class="divide-y divide-slate-100">
-            <tr>
-              <td class="px-6 py-4 font-mono text-xs text-slate-700">BIGQUERY_BILLING_PROJECT</td>
-              <td class="px-6 py-4 text-slate-600">oa-data-coepowerbi-np</td>
-              <td class="px-6 py-4 text-slate-500">Matthieu</td>
-              <td class="px-6 py-4 text-center"><span class="material-symbols-outlined text-green-500 text-lg">verified</span></td>
-            </tr>
-            <tr>
-              <td class="px-6 py-4 font-mono text-xs text-slate-700">PRO_LICENSE_GROUP_EMAIL</td>
-              <td class="px-6 py-4 text-slate-400 italic">En attente</td>
-              <td class="px-6 py-4 text-slate-500">Anes</td>
-              <td class="px-6 py-4 text-center"><span class="material-symbols-outlined text-orange-400 text-lg">warning</span></td>
-            </tr>
-            <tr>
-              <td class="px-6 py-4 font-mono text-xs text-slate-700">DRY_RUN</td>
-              <td class="px-6 py-4"><span class="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-bold">TRUE</span></td>
-              <td class="px-6 py-4 text-slate-500">Config</td>
-              <td class="px-6 py-4 text-center"><span class="material-symbols-outlined text-primary text-lg">toggle_on</span></td>
-            </tr>
-            <tr>
-              <td class="px-6 py-4 font-mono text-xs text-slate-700">BATCH_SIZE</td>
-              <td class="px-6 py-4 text-slate-600">20</td>
-              <td class="px-6 py-4 text-slate-500">Config</td>
-              <td class="px-6 py-4 text-center"><span class="material-symbols-outlined text-green-500 text-lg">verified</span></td>
-            </tr>
-            <tr>
-              <td class="px-6 py-4 font-mono text-xs text-slate-700">RETENTION_DAYS</td>
-              <td class="px-6 py-4 text-slate-600">120</td>
-              <td class="px-6 py-4 text-slate-500">Config</td>
-              <td class="px-6 py-4 text-center"><span class="material-symbols-outlined text-green-500 text-lg">verified</span></td>
-            </tr>
-            <tr>
-              <td class="px-6 py-4 font-mono text-xs text-slate-700">SERVICE_ACCOUNT</td>
-              <td class="px-6 py-4 font-mono text-xs text-slate-600">89152354183-compute@developer.gserviceaccount.com</td>
-              <td class="px-6 py-4 text-slate-500">GCP</td>
-              <td class="px-6 py-4 text-center"><span class="material-symbols-outlined text-green-500 text-lg">verified</span></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- SECTION 5: FAQ                                -->
+    <!-- ══════════════════════════════════════════════ -->
+    <div id="section-faq" class="scroll-mt-[72px] space-y-8">
+      <h2 class="text-3xl font-black text-slate-900 tracking-tight">FAQ</h2>
 
-    <!-- ═══ Dry Run Results ═══ -->
-    <section class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-      <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
-        <h3 class="font-bold text-slate-900 flex items-center gap-2">
-          <span class="material-symbols-outlined text-primary">play_circle</span> Dry Run Preview
-        </h3>
-        <span id="dryrun-count" class="text-xs text-slate-500">Click "Run Dry Run" to query BigQuery</span>
-      </div>
-      <div id="dryrun-results" class="p-6">
-        <div class="text-center py-8 text-slate-400">
-          <span class="material-symbols-outlined text-4xl mb-2 block">search</span>
-          <p class="text-sm">No dry run data yet. Click <strong>"Run Dry Run"</strong> to fetch users from BigQuery.</p>
+      <section class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+        <div class="px-6 py-4 border-b border-slate-200 bg-slate-50/50">
+          <h3 class="font-bold text-slate-900 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">help_outline</span> Questions frequentes
+          </h3>
         </div>
-      </div>
-    </section>
 
-    <!-- ═══ Execution Logs ═══ -->
-    <section class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-      <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-        <h3 class="font-bold text-slate-900">Recent Executions</h3>
-        <button id="btn-refresh-logs" class="text-sm font-bold text-primary flex items-center gap-1">
-          <span class="material-symbols-outlined text-sm">refresh</span> Refresh
-        </button>
-      </div>
-      <div class="p-0">
-        <table class="w-full text-left text-sm">
-          <thead class="bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-            <tr>
-              <th class="px-6 py-3">Timestamp (UTC)</th>
-              <th class="px-6 py-3">Mode</th>
-              <th class="px-6 py-3">Users</th>
-              <th class="px-6 py-3">Revoked</th>
-              <th class="px-6 py-3">Outcome</th>
-            </tr>
-          </thead>
-          <tbody id="logs-table-body" class="divide-y divide-slate-100 text-slate-600">
-            <tr>
-              <td colspan="5" class="px-6 py-6 text-center text-slate-400 italic text-xs">No executions yet. Run a dry run to get started.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
+        <!-- FAQ 1 -->
+        <div class="faq-toggle px-6 py-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-all border-b border-slate-100">
+          <span class="text-sm font-medium text-slate-700">Comment puis-je voir les utilisateurs qui seront supprimes ?</span>
+          <span class="material-symbols-outlined text-slate-400 text-lg faq-chevron transition-transform">expand_more</span>
+        </div>
+        <div class="faq-detail border-b border-slate-100">
+          <div class="px-6 py-4 bg-slate-50/50">
+            <p class="text-sm text-slate-600 mb-3">Pour des raisons de confidentialite, les adresses email ne sont pas affichees dans ce tableau de bord. Vous pouvez consulter la liste des utilisateurs directement dans BigQuery en executant la requete suivante :</p>
+            <div class="bg-loreal-black rounded-lg p-4 text-xs font-mono text-slate-300 overflow-x-auto relative">
+              <button class="copy-btn absolute top-2 right-2 px-2 py-1 bg-slate-700 text-slate-400 rounded text-[10px] hover:text-white">Copier</button>
+<pre id="faq-query-identify">-- Executez dans BigQuery (projet: oa-data-coepowerbi-np)
+-- Retourne les emails des utilisateurs inactifs eligibles a la suppression
+SELECT
+  TRIM(LOWER(user_email)) AS user_email,
+  last_workspace_pro_consumer_activity,
+  last_workspace_pro_builder_activity,
+  DATE_DIFF(CURRENT_DATE(), start_date, DAY) AS nb_jours_licence
+FROM
+  `itg-btdppublished-gbl-ww-pd.btdp_ds_c1_0a2_powerbimetadata_eu_pd.license_pro_users_v1`
+WHERE
+  end_date = '9999-12-31'
+  AND DATE_DIFF(CURRENT_DATE(), DATE(last_workspace_pro_consumer_activity), DAY) > 120
+  AND DATE_DIFF(CURRENT_DATE(), DATE(last_workspace_pro_builder_activity), DAY) > 120
+  AND pbi_asset_ownership_details IS NULL
+  AND DATE_DIFF(CURRENT_DATE(), start_date, DAY) > 60
+  AND STRPOS(REPLACE(TRIM(LOWER(user_email)), '@loreal.com', ''), '.') > 0
+ORDER BY nb_jours_licence DESC;</pre>
+            </div>
+            <p class="text-xs text-slate-500 mt-3">
+              <strong>Explication :</strong> Cette requete retourne les utilisateurs qui ont une licence Pro depuis plus de 60 jours, sans activite Consumer ni Builder depuis 120 jours, et qui ne possedent aucun asset Pro (workspace, rapport, modele semantique). Seuls les comptes humains (avec un '.' dans l'email) sont inclus.
+            </p>
+          </div>
+        </div>
 
-    <!-- Contacts section removed -->
+        <!-- FAQ 2 -->
+        <div class="faq-toggle px-6 py-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-all border-b border-slate-100">
+          <span class="text-sm font-medium text-slate-700">Comment puis-je voir les utilisateurs qui ont ete supprimes ?</span>
+          <span class="material-symbols-outlined text-slate-400 text-lg faq-chevron transition-transform">expand_more</span>
+        </div>
+        <div class="faq-detail border-b border-slate-100">
+          <div class="px-6 py-4 bg-slate-50/50">
+            <p class="text-sm text-slate-600 mb-3">L'historique des executions ci-dessus montre les comptes agreges (nombre d'utilisateurs identifies et supprimes par execution). Pour retrouver la liste detaillee des emails supprimes :</p>
+            <div class="space-y-3">
+              <div class="flex items-start gap-3">
+                <span class="bg-primary text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">1</span>
+                <div>
+                  <p class="text-sm text-slate-700 font-medium">Fichier CSV local</p>
+                  <p class="text-xs text-slate-500">Chaque execution (dry-run ou live) exporte un fichier CSV dans le dossier <code class="bg-slate-200 px-1 rounded">./output/</code>. Ce fichier contient les emails, le statut et la date d'execution.</p>
+                </div>
+              </div>
+              <div class="flex items-start gap-3">
+                <span class="bg-primary text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">2</span>
+                <div>
+                  <p class="text-sm text-slate-700 font-medium">Cloud Logging (apres deploiement GCP)</p>
+                  <p class="text-xs text-slate-500">Une fois deploye sur Cloud Run, l'historique complet sera disponible dans Cloud Logging avec les details de chaque suppression.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- FAQ 3 -->
+        <div class="faq-toggle px-6 py-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-all border-b border-slate-100">
+          <span class="text-sm font-medium text-slate-700">A quelle frequence le nettoyage s'execute-t-il ?</span>
+          <span class="material-symbols-outlined text-slate-400 text-lg faq-chevron transition-transform">expand_more</span>
+        </div>
+        <div class="faq-detail">
+          <div class="px-6 py-4 bg-slate-50/50">
+            <p class="text-sm text-slate-600">Par defaut, le nettoyage automatique s'execute le <strong>dernier jour de chaque mois a 02h00 UTC</strong>. Vous pouvez modifier cette frequence dans la section <strong>Configuration &gt; Programmation</strong> (premier jour du mois, chaque lundi, etc.).</p>
+            <p class="text-sm text-slate-600 mt-2">En complement, le bouton <strong>"Executer la suppression"</strong> permet de lancer le nettoyage manuellement a tout moment.</p>
+          </div>
+        </div>
+      </section>
+    </div>
 
   </div>
 </main>
 
+<!-- ═══ Confirmation Modal ═══ -->
+<div id="revoke-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+  <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
+    <div class="px-6 py-4 bg-red-50 border-b border-red-100 flex items-center gap-3">
+      <span class="material-symbols-outlined text-red-600 text-2xl">warning</span>
+      <h3 class="font-bold text-red-800">Confirmer la suppression</h3>
+    </div>
+    <div class="p-6">
+      <p class="text-sm text-slate-700">Vous etes sur le point de supprimer les utilisateurs inactifs du groupe de licence Pro.</p>
+      <p class="text-sm text-slate-700 mt-2">Cette action est <strong>irreversible</strong>. Les utilisateurs devront etre re-ajoutes manuellement si necessaire.</p>
+      <p id="revoke-modal-count" class="mt-4 text-center text-2xl font-black text-red-600"></p>
+    </div>
+    <div class="px-6 py-4 bg-slate-50 flex justify-end gap-3">
+      <button id="btn-revoke-cancel" class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-100 transition-all">Annuler</button>
+      <button id="btn-revoke-confirm" class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700 transition-all flex items-center gap-2">
+        <span class="material-symbols-outlined text-sm">delete_sweep</span> Confirmer la suppression
+      </button>
+    </div>
+  </div>
 </div>
 
 <!-- ═══ JAVASCRIPT ═══ -->
@@ -411,15 +632,56 @@ document.querySelectorAll('.endpoint-toggle').forEach(toggle => {
   });
 });
 
+// ── FAQ accordion ────────────────────────────────
+document.querySelectorAll('.faq-toggle').forEach(toggle => {
+  toggle.addEventListener('click', () => {
+    const detail = toggle.nextElementSibling;
+    if (detail && detail.classList.contains('faq-detail')) {
+      detail.classList.toggle('open');
+      const chevron = toggle.querySelector('.faq-chevron');
+      if (chevron) {
+        chevron.style.transform = detail.classList.contains('open') ? 'rotate(180deg)' : '';
+      }
+    }
+  });
+});
+
 // ── Copy buttons ────────────────────────────────
 document.querySelectorAll('.copy-btn').forEach(btn => {
   btn.addEventListener('click', e => {
     e.stopPropagation();
     const pre = btn.closest('div').querySelector('pre');
     navigator.clipboard.writeText(pre.textContent).then(() => {
+      const orig = btn.textContent;
       btn.textContent = 'Copied!';
-      setTimeout(() => btn.textContent = 'Copy', 1500);
+      setTimeout(() => btn.textContent = orig, 1500);
     });
+  });
+});
+
+// ── Top nav: active state on scroll ─────────────
+const navLinks = document.querySelectorAll('.nav-link');
+const sections = ['execution', 'configuration', 'api', 'architecture', 'faq'];
+
+function updateActiveNav() {
+  const scrollPos = window.scrollY + 80;
+  let current = 'execution';
+  for (const id of sections) {
+    const el = document.getElementById('section-' + id);
+    if (el && el.offsetTop <= scrollPos) {
+      current = id;
+    }
+  }
+  navLinks.forEach(link => {
+    link.classList.toggle('nav-active', link.dataset.nav === current);
+  });
+}
+
+window.addEventListener('scroll', updateActiveNav);
+navLinks.forEach(link => {
+  link.addEventListener('click', () => {
+    navLinks.forEach(l => l.classList.remove('nav-active'));
+    link.classList.add('nav-active');
   });
 });
 
@@ -430,6 +692,17 @@ async function loadStatus() {
     const data = await res.json();
     document.getElementById('stat-retention').textContent = data.config.RETENTION_DAYS;
     document.getElementById('stat-batch').textContent = data.config.BATCH_SIZE;
+
+    const revokeBtn = document.getElementById('btn-revoke');
+    const dryrunWarning = document.getElementById('revoke-dryrun-warning');
+    if (data.config.DRY_RUN) {
+      revokeBtn.disabled = true;
+      dryrunWarning.classList.remove('hidden');
+    } else {
+      revokeBtn.disabled = false;
+      dryrunWarning.classList.add('hidden');
+    }
+
     if (data.last_run) {
       document.getElementById('stat-lastrun').textContent = data.last_run.timestamp.split(' ')[0];
       document.getElementById('stat-lastrun-time').textContent = data.last_run.timestamp.split(' ')[1] + ' UTC';
@@ -464,6 +737,7 @@ document.getElementById('btn-count').addEventListener('click', async () => {
           <p class="text-xs text-slate-400 mt-2">Queried at ${data.queried_at} &bull; Retention: ${document.getElementById('stat-retention').textContent} days</p>
         </div>`;
       loadLogs();
+      loadHistorySummary();
     } else {
       document.getElementById('dryrun-results').innerHTML = `<div class="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">${data.message}</div>`;
     }
@@ -475,6 +749,106 @@ document.getElementById('btn-count').addEventListener('click', async () => {
   btn.disabled = false;
 });
 
+// ── Dry Run button ──────────────────────────────
+document.getElementById('btn-dryrun').addEventListener('click', async () => {
+  const btn = document.getElementById('btn-dryrun');
+  btn.innerHTML = '<span class="material-symbols-outlined text-sm spinner">refresh</span> Running...';
+  btn.disabled = true;
+  const resultDiv = document.getElementById('execution-result');
+
+  try {
+    const res = await fetch(`${API_BASE}/api/dry-run`, { method: 'POST' });
+    const data = await res.json();
+
+    if (data.status === 'ok') {
+      resultDiv.classList.remove('hidden');
+      resultDiv.innerHTML = `
+        <div class="p-4 bg-green-50 border border-green-200 rounded-lg">
+          <p class="text-sm font-bold text-green-800 flex items-center gap-2">
+            <span class="material-symbols-outlined text-sm">check_circle</span> Dry Run termine
+          </p>
+          <p class="text-xs text-green-600 mt-1">${data.total} utilisateurs identifies. CSV exporte dans ./output/</p>
+        </div>`;
+      document.getElementById('stat-identified').textContent = data.total;
+      loadLogs();
+      loadHistorySummary();
+    } else {
+      resultDiv.classList.remove('hidden');
+      resultDiv.innerHTML = `<div class="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">${data.message}</div>`;
+    }
+  } catch (e) {
+    resultDiv.classList.remove('hidden');
+    resultDiv.innerHTML = `<div class="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">Erreur: ${e.message}</div>`;
+  }
+
+  btn.innerHTML = '<span class="material-symbols-outlined text-sm">play_circle</span> Lancer Dry Run';
+  btn.disabled = false;
+});
+
+// ── Revoke button + modal ───────────────────────
+let lastCount = 0;
+
+document.getElementById('btn-revoke').addEventListener('click', async () => {
+  try {
+    const res = await fetch(`${API_BASE}/api/count`);
+    const data = await res.json();
+    lastCount = data.count || 0;
+  } catch (e) {
+    lastCount = '?';
+  }
+  document.getElementById('revoke-modal-count').textContent = `${lastCount} utilisateurs seront supprimes`;
+  document.getElementById('revoke-modal').classList.remove('hidden');
+});
+
+document.getElementById('btn-revoke-cancel').addEventListener('click', () => {
+  document.getElementById('revoke-modal').classList.add('hidden');
+});
+
+document.getElementById('revoke-modal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('revoke-modal')) {
+    document.getElementById('revoke-modal').classList.add('hidden');
+  }
+});
+
+document.getElementById('btn-revoke-confirm').addEventListener('click', async () => {
+  document.getElementById('revoke-modal').classList.add('hidden');
+  const btn = document.getElementById('btn-revoke');
+  btn.innerHTML = '<span class="material-symbols-outlined text-sm spinner">refresh</span> Suppression...';
+  btn.disabled = true;
+  const resultDiv = document.getElementById('execution-result');
+
+  try {
+    const res = await fetch(`${API_BASE}/api/revoke`, { method: 'POST' });
+    const data = await res.json();
+
+    resultDiv.classList.remove('hidden');
+    if (data.status === 'ok') {
+      const run = data.run;
+      resultDiv.innerHTML = `
+        <div class="p-4 ${run.outcome === 'SUCCESS' ? 'bg-green-50 border-green-200' : 'bg-orange-50 border-orange-200'} border rounded-lg">
+          <p class="text-sm font-bold ${run.outcome === 'SUCCESS' ? 'text-green-800' : 'text-orange-800'} flex items-center gap-2">
+            <span class="material-symbols-outlined text-sm">${run.outcome === 'SUCCESS' ? 'check_circle' : 'warning'}</span>
+            Suppression terminee — ${run.outcome}
+          </p>
+          <p class="text-xs ${run.outcome === 'SUCCESS' ? 'text-green-600' : 'text-orange-600'} mt-1">
+            ${run.revoked} supprimes / ${run.failed} echecs sur ${run.users_identified} identifies
+          </p>
+        </div>`;
+      document.getElementById('stat-revoked').textContent = run.revoked;
+    } else {
+      resultDiv.innerHTML = `<div class="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">${data.message}</div>`;
+    }
+    loadLogs();
+    loadHistorySummary();
+  } catch (e) {
+    resultDiv.classList.remove('hidden');
+    resultDiv.innerHTML = `<div class="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">Erreur: ${e.message}</div>`;
+  }
+
+  btn.innerHTML = '<span class="material-symbols-outlined text-sm">delete_sweep</span> Executer la suppression';
+  btn.disabled = false;
+});
+
 // ── Load execution logs ─────────────────────────
 async function loadLogs() {
   try {
@@ -483,15 +857,19 @@ async function loadLogs() {
     const tbody = document.getElementById('logs-table-body');
 
     if (data.logs.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-6 text-center text-slate-400 italic text-xs">No executions yet.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-6 text-center text-slate-400 italic text-xs">No executions yet.</td></tr>';
       return;
     }
 
     tbody.innerHTML = data.logs.map(log => {
       const outcomeClass = log.outcome.includes('SUCCESS') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
+      const modeClass = log.mode === 'LIVE' ? 'bg-red-100 text-red-700' : 'bg-primary/20 text-primary';
+      const trigger = log.trigger || 'manual';
+      const triggerIcon = trigger === 'scheduled' ? 'schedule' : 'touch_app';
       return `<tr>
         <td class="px-6 py-3 text-xs">${log.timestamp}</td>
-        <td class="px-6 py-3"><span class="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-bold">${log.mode}</span></td>
+        <td class="px-6 py-3"><span class="px-2 py-0.5 rounded-full ${modeClass} text-[10px] font-bold">${log.mode}</span></td>
+        <td class="px-6 py-3 text-xs flex items-center gap-1"><span class="material-symbols-outlined text-xs">${triggerIcon}</span>${trigger}</td>
         <td class="px-6 py-3 font-medium">${log.users_identified}</td>
         <td class="px-6 py-3">${log.revoked}</td>
         <td class="px-6 py-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${outcomeClass}">${log.outcome}</span></td>
@@ -501,6 +879,87 @@ async function loadLogs() {
     console.log('Could not load logs');
   }
 }
+
+// ── Load history summary ─────────────────────────
+async function loadHistorySummary() {
+  try {
+    const res = await fetch(`${API_BASE}/api/history/summary`);
+    const data = await res.json();
+    document.getElementById('history-total-runs').textContent = data.total_executions;
+    document.getElementById('history-total-identified').textContent = data.total_users_identified;
+    document.getElementById('history-total-revoked').textContent = data.total_revoked;
+  } catch (e) {
+    console.log('Could not load history summary');
+  }
+}
+
+// ── Schedule ─────────────────────────────────────
+const CRON_MAP = {
+  'monthly_last_day': (h) => `0 ${h} L * *`,
+  'monthly_first': (h) => `0 ${h} 1 * *`,
+  'weekly_monday': (h) => `0 ${h} * * 1`,
+};
+
+function updateCronDisplay() {
+  const freq = document.getElementById('schedule-frequency').value;
+  const time = document.getElementById('schedule-time').value;
+  const hour = parseInt(time.split(':')[0]) || 2;
+  document.getElementById('schedule-cron').textContent = CRON_MAP[freq] ? CRON_MAP[freq](hour) : '0 2 L * *';
+}
+
+document.getElementById('schedule-frequency').addEventListener('change', updateCronDisplay);
+document.getElementById('schedule-time').addEventListener('change', updateCronDisplay);
+
+async function loadSchedule() {
+  try {
+    const res = await fetch(`${API_BASE}/api/schedule`);
+    const data = await res.json();
+    const s = data.schedule;
+    document.getElementById('schedule-enabled').checked = s.enabled;
+    document.getElementById('schedule-frequency').value = s.frequency;
+    document.getElementById('schedule-time').value = s.time;
+    updateCronDisplay();
+
+    if (s.cloud_scheduler_synced) {
+      document.getElementById('schedule-sync-icon').textContent = 'cloud_done';
+      document.getElementById('schedule-sync-icon').className = 'material-symbols-outlined text-green-500 text-lg';
+      document.getElementById('schedule-sync-text').textContent = 'Cloud Scheduler : Synchronise';
+    }
+  } catch (e) {
+    console.log('Could not load schedule');
+  }
+}
+
+document.getElementById('btn-save-schedule').addEventListener('click', async () => {
+  const btn = document.getElementById('btn-save-schedule');
+  btn.innerHTML = '<span class="material-symbols-outlined text-sm spinner">refresh</span> Saving...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/schedule`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        enabled: document.getElementById('schedule-enabled').checked,
+        frequency: document.getElementById('schedule-frequency').value,
+        time: document.getElementById('schedule-time').value,
+      }),
+    });
+    const data = await res.json();
+    if (data.status === 'ok') {
+      btn.innerHTML = '<span class="material-symbols-outlined text-sm">check</span> Enregistre!';
+      setTimeout(() => {
+        btn.innerHTML = '<span class="material-symbols-outlined text-sm">save</span> Enregistrer';
+      }, 2000);
+    }
+  } catch (e) {
+    btn.innerHTML = '<span class="material-symbols-outlined text-sm">error</span> Erreur';
+    setTimeout(() => {
+      btn.innerHTML = '<span class="material-symbols-outlined text-sm">save</span> Enregistrer';
+    }, 2000);
+  }
+  btn.disabled = false;
+});
 
 // ── Validate config ─────────────────────────────
 document.getElementById('btn-validate-config').addEventListener('click', async () => {
@@ -520,21 +979,57 @@ document.getElementById('btn-validate-config').addEventListener('click', async (
 });
 
 // ── Refresh button ──────────────────────────────
-document.getElementById('btn-refresh').addEventListener('click', () => { loadStatus(); loadLogs(); });
-document.getElementById('btn-refresh-logs').addEventListener('click', loadLogs);
+document.getElementById('btn-refresh').addEventListener('click', () => { loadStatus(); loadLogs(); loadHistorySummary(); });
+document.getElementById('btn-refresh-logs').addEventListener('click', () => { loadLogs(); loadHistorySummary(); });
 
-// ── Sidebar navigation ─────────────────────────
-document.querySelectorAll('[data-section]').forEach(link => {
-  link.addEventListener('click', e => {
-    e.preventDefault();
-    document.querySelectorAll('[data-section]').forEach(l => l.classList.remove('sidebar-active'));
-    link.classList.add('sidebar-active');
-  });
+// ── Auth status ─────────────────────────────────
+async function checkAuth() {
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/status`);
+    const data = await res.json();
+    if (data.authenticated) {
+      document.getElementById('auth-banner').classList.add('hidden');
+      document.getElementById('auth-ok-banner').classList.remove('hidden');
+      document.getElementById('auth-account').textContent = data.account || 'Ready to query BigQuery';
+    } else {
+      document.getElementById('auth-banner').classList.remove('hidden');
+      document.getElementById('auth-ok-banner').classList.add('hidden');
+    }
+  } catch (e) {
+    document.getElementById('auth-banner').classList.add('hidden');
+    document.getElementById('auth-ok-banner').classList.add('hidden');
+  }
+}
+
+document.getElementById('btn-auth-login').addEventListener('click', async () => {
+  const btn = document.getElementById('btn-auth-login');
+  btn.innerHTML = '<span class="material-symbols-outlined text-sm spinner">refresh</span> Opening browser...';
+  btn.disabled = true;
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/login`, { method: 'POST' });
+    const data = await res.json();
+    if (data.status === 'ok') {
+      btn.innerHTML = '<span class="material-symbols-outlined text-sm">hourglass_top</span> Complete login in browser...';
+    } else {
+      btn.innerHTML = '<span class="material-symbols-outlined text-sm">error</span> ' + data.message;
+    }
+  } catch (e) {
+    btn.innerHTML = '<span class="material-symbols-outlined text-sm">error</span> Backend not reachable';
+  }
+  setTimeout(() => {
+    btn.innerHTML = '<span class="material-symbols-outlined text-sm">login</span> Login with Google';
+    btn.disabled = false;
+  }, 5000);
 });
 
+document.getElementById('btn-auth-check').addEventListener('click', checkAuth);
+
 // ── Init ────────────────────────────────────────
+checkAuth();
 loadStatus();
 loadLogs();
+loadHistorySummary();
+loadSchedule();
 </script>
 
 </body>
