@@ -202,15 +202,17 @@ MCP server pour accès au système de fichiers local :
 
 ### 2. Dépôt pro L'Oréal — Auto Licence Clean uniquement
 
-**URL** : `https://github.com/mmadi-oa/auto-licence-clean`
+**URL SSH** : `git@github.com:mmadi-oa/auto-licence-clean.git`
 **Remote git** : `loreal`
-**Branche** : `main`
+**Branche** : `developer`
+**Visibilité** : **privé**
 **Contenu** : uniquement le dossier `Auto_Licence_Clean/` (subtree push)
 **Compte** : `mmadi-oa` (compte GitHub L'Oréal pro)
+**Auth** : clé SSH `~/.ssh/loreal_ed25519`
 
 Pour pusher vers le dépôt pro :
 ```bash
-git subtree push --prefix=Auto_Licence_Clean loreal main
+git subtree push --prefix=Auto_Licence_Clean loreal developer
 ```
 
 ### Connexion SSH (configurée pour les deux)
