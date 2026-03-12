@@ -98,6 +98,20 @@ Filtre : `need_pro_license=FALSE AND NbDayHaveLicence>60 AND IsHuman=TRUE`
 **Documentation** : `PowerBI_COE/Performance Testing/README.md`
 **Passation Anes** : `PowerBI_COE/Performance Testing/Passation.md`
 
+**Scripts disponibles** (dans `OARealisticLoadTestTool/OARealisticLoadTestTool/`) :
+- `Orchestrator.ps1` — script principal
+- `Monitoring.ps1` — monitoring live
+- `View-LiveMetrics.ps1` — métriques en temps réel
+- `Run_Load_Test_Only.ps1` — test uniquement sans setup
+- `Setup_Load_Test.ps1` / `Update_Token_Only.ps1` — initialisation
+- `RealisticLoadTest.html` — page HTML de suivi existante
+- `PBIReport.json` — config rapport (reportId=82891daf, groupId=83771731)
+
+**Prochaine étape — Frontend Stress Test** :
+Développer une interface web pour piloter et visualiser les stress tests.
+Inspiré de `RealisticLoadTest.html` déjà présent dans le dossier.
+Objectif : lancer les tests, voir les résultats en temps réel, historique des runs.
+
 **En attente** :
 - Lien Google Sheet de résultats (demander à Anes)
 - Lien notebook Fabric (demander à Abdelkader)
@@ -188,6 +202,41 @@ Repo : `github.com/microsoft/powerbi-modeling-mcp` (Public Preview)
 
 MCP server pour accès au système de fichiers local :
 - `list_directory`, `directory_tree`, `read_text_file`
+
+### confluence (mcp-atlassian)
+
+MCP server pour lire/chercher dans Confluence L'Oréal.
+**Executable** : `C:/Users/M.MMADI-EXT/AppData/Local/Programs/Python/Python313/Scripts/mcp-atlassian.exe`
+**Config** : `.mcp.json` (non commité — contient le token Confluence)
+
+Variables requises dans `.mcp.json` :
+```json
+{
+  "mcpServers": {
+    "confluence": {
+      "command": "<chemin>/mcp-atlassian.exe",
+      "env": {
+        "CONFLUENCE_URL": "https://confluence.e-loreal.com",
+        "CONFLUENCE_AUTH_TYPE": "token",
+        "CONFLUENCE_TOKEN": "<personal_access_token>"
+      }
+    }
+  }
+}
+```
+
+> Le token Confluence se génère sur : `https://confluence.e-loreal.com/plugins/personalaccesstokens/usertokens.action`
+
+### Skills Claude Code (`.claude/skills/`)
+
+Skills BTDP disponibles — chargés automatiquement par Claude Code :
+- `btdp-api.md` — conventions API BTDP
+- `btdp-framework.md` — framework BTDP
+- `btdp-git.md` — workflow git BTDP
+- `btdp-naming.md` — conventions de nommage
+- `btdp-powerbi.md` — best practices Power BI BTDP
+
+> `settings.local.json` (permissions Claude) non commité — contient des tokens.
 
 ---
 

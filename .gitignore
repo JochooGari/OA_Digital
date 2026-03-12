@@ -38,8 +38,7 @@ package-lock.json
 A Organiser/
 2026_02_16/
 
-# Dossiers hors scope du dépôt GitHub (conserver uniquement PowerBI_COE/, Auto_Licence_Clean/ et CLAUDE.md)
-.claude/
+# Dossiers hors scope du dépôt GitHub
 Dashboard/
 Documentation/
 Fchier PBI/
@@ -49,11 +48,13 @@ NERD_PBIP_FIXED/
 NERD_PBIP_SEMANTIC/
 Nerd_v3.Report/
 Nerd_v3.SemanticModel/
-OARealisticLoadTestTool/
 OARealisticLoadTestTool.rar
 Web/
 webapp/
 extractions_raw.sql
+
+# OARealisticLoadTestTool — exclure uniquement les logs runtime
+OARealisticLoadTestTool/**/logs/
 
 # Secrets — ne jamais committer
 .mcp.json

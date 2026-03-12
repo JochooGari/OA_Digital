@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <style>
+
+        body{
+
+            font-family: 'Segoe UI';            
+
+        }
+
+    </style>
+
+    <meta charset="utf-8" />
+
+    <title></title>
+
+    
+
+    <!--JS libraries-->
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+
+    <script src="https://cdn.rawgit.com/Microsoft/PowerBI-JavaScript/master/dist/powerbi.min.js" type="text/javascript"></script>
+
+    
+
+    <!-- user configurable parameters in external JSON files-->
+
+    <script type="text/javascript" src="PBIToken.json"></script>
+
+    <script type="text/javascript" src="PBIReport.json"></script>
+
+    
+
+    <script>
+
+		var startTime = new Date();
+		var lastRefreshStart = new Date();  
+
+        var PBIEtoken = JSON.parse(accessToken).PBIToken;
+        var embedUrl = reportParameters.reportUrl;
+
+        var filterStart = reportParameters.filterStart;
+
+        var filterValue = filterStart; 
+
+        var filterMax = reportParameters.filterMax;
+
+		
+		var filtersList = Array(0);
+		if (reportParameters.filters != undefined)
+		{
+			var arrFilterCounter = Array(reportParameters.filters.length);
+			var filterCombinations = 1;
+			for (var i = 0; i < reportParameters.filters.length; i++)
+			{
+				filterCombinations = filterCombinations * reportParameters.filters[i].filtersList.length;
+				arrFilterCounter[i] = 0;
+			}
+			
+			filtersList = Array(filterCombinations);
+			for (var i = 0; i < filterCombinations; i++)
+			{
+				filtersList[i] = {
+					slicers: [],
+					filters: []
+				};
+				for (var j = 0; j < reportParameters.filters.length; j++)
+				{
+					var v = reportParameters.filters[j].filtersList[arrFilterCounter[j]];
+
+					var filter = {
+						$schema: "http://powerbi.com/product/schema#basic",
+						target: {
+							table: reportParameters.filters[j].filterTable,
+							column: reportParameters.filters[j].filterColumn
+						},
+						operator: "In",
+						values: (v != null ? (Array.isArray(v) ? v : [v]) : reportParameters.filters[j].filtersList.filter(function(a) { return a != null; })),
+						filterType: 1
+					};
+					
+					var slicer = 
+					  {
+						selector: {
+						  $schema: "http://powerbi.com/product/schema#slicerTargetSelector",
+						  target: {
+							table: reportParameters.filters[j].filterTable,
+							column: reportParameters.filters[j].filterColumn
+						  } 
+						},
+						state: {
+						  filters: [
+							{
+							  $schema: "http://powerbi.com/product/schema#basic",
+							  target: {
+								table: reportParameters.filters[j].filterTable,
+								column: reportParameters.filters[j].filterColumn
+							  },
+							  operator: "In",
+							  values: (v != null ? (Array.isArray(v) ? v : [v]) : reportParameters.filters[j].filtersList.filter(function(a) { return a != null; }))
+							}
+						  ]
+						}
+					  };
+					
+					if (reportParameters.filters[j].isSlicer)
+						filtersList[i].slicers.push(slicer);
+					else
+						filtersList[i].filters.push(filter);
+						
+					
+				}
+				for (var z = reportParameters.filters.length - 1; z >= 0; z--)
+				{
+					if (arrFilterCounter[z]+1 < reportParameters.filters[z].filtersList.length)
+					{
+						arrFilterCounter[z]++;
+						z = -1;
+					}
+					else
+					{
+						arrFilterCounter[z] = 0;
+					}
+				}
+			}
+		}
+		
+		function shuffleArray(array) {
+			for (let i = array.length - 1; i > 0; i--) {
+				const j = Math.floor(Math.random() * (i + 1));
+				[array[i], array[j]] = [array[j], array[i]];
+			}
+		}
+		
+		var filtersCount = filterMax - filterStart;
+		if (filtersList != null)
+		{
+			filterStart = 0;
+			filterMax = filtersList.length;
+			filtersCount = filterMax;
+			shuffleArray(filtersList);
+		}
+
+		var bookmarkList = reportParameters.bookmarkList;
+		if (bookmarkList == null || bookmarkList == undefined || bookmarkList == "")
+		{
+			bookmarkList = [""];
+		}
+
+        var thinkTimeSeconds = reportParameters.thinkTimeSeconds;
+		thinkTimeSeconds = (thinkTimeSeconds == null ? 0 : thinkTimeSeconds);
+		
+		var pageName = reportParameters.pageName;
+		pageName = (pageName == undefined ? null : pageName);
+
+		var layoutType = reportParameters.layoutType;
+		layoutType = (layoutType == undefined ? "Master" : layoutType);
+
+        var sessionRestart = reportParameters.sessionRestart;
+
+        var reportId = GetQSParam("reportId", embedUrl);
+
+        var loadCounter = sessionStorage.getItem('reloadCounter') === null ? 0 : parseInt(sessionStorage.getItem('reloadCounter'));
+
+		startTime = (sessionStorage.getItem('originalStartTime') === null ? startTime : new Date(sessionStorage.getItem('originalStartTime')));
+
+        var errorTracker = "";
+        var errorCount = 0;
+        var consecutiveErrors = 0;
+        var maxErrors = 10;
+        var maxConsecutiveErrors = 5;
+
+        var report;
+		
+		// Performance tracking variables
+		var performanceMetrics = {
+			embedStartTime: null,
+			loadedTime: null,
+			renderedTime: null,
+			timeToLoad: 0,
+			timeToRender: 0,
+			totalTime: 0,
+			isCached: false,
+			loadedEventFired: false
+		};
+
+		// -----------------------------------------------------------------------
+		// Embed lifecycle tracking
+		// embedInProgress = true from the moment EmbedReport() is called until
+		// either the rendered event or error event fires. Used by the watchdog
+		// to detect a hung embed (no event ever fires).
+		// -----------------------------------------------------------------------
+		var embedInProgress = false;
+		var embedStartedAt = null;
+		var embedHangTimeoutMs = 60000; // 60s max to wait for rendered/error event
+
+		// -----------------------------------------------------------------------
+		// FIX 1: Web Worker-based timer with setTimeout fallback
+		// Runs on a separate thread — immune to Chrome background tab throttling.
+		// Replaces all setTimeout calls used to schedule the next EmbedReport().
+		//
+		// IMPORTANT: Chrome blocks new Worker(blob) when the page is loaded from
+		// a file:// URL (which is how this test runs). The try/catch detects this
+		// silently and falls back to a regular setTimeout so the page never freezes.
+		// The Chrome launch flags (--disable-background-timer-throttling etc.) in
+		// run_load_test_only.ps1 handle throttling for the fallback path.
+		// -----------------------------------------------------------------------
+		var workerTimerSupported = null; // null = untested, true/false after first call
+
+		function workerTimer(callback, delayMs) {
+			// If we already confirmed workers don't work, skip straight to fallback
+			if (workerTimerSupported === false) {
+				setTimeout(callback, delayMs);
+				return null;
+			}
+
+			try {
+				var workerCode = [
+					'self.onmessage = function(e) {',
+					'    setTimeout(function() { self.postMessage("tick"); }, e.data);',
+					'};'
+				].join('\n');
+				var blob = new Blob([workerCode], { type: 'application/javascript' });
+				var worker = new Worker(URL.createObjectURL(blob));
+				worker.onerror = function(e) {
+					console.warn("workerTimer: Worker error, switching to setTimeout fallback:", e.message);
+					workerTimerSupported = false;
+					worker.terminate();
+					setTimeout(callback, delayMs);
+				};
+				worker.onmessage = function() {
+					workerTimerSupported = true;
+					worker.terminate();
+					callback();
+				};
+				worker.postMessage(delayMs);
+				return worker;
+			} catch (e) {
+				console.warn("workerTimer: Worker creation failed, using setTimeout fallback:", e.message);
+				workerTimerSupported = false;
+				setTimeout(callback, delayMs);
+				return null;
+			}
+		}
+
+		// -----------------------------------------------------------------------
+		// FIX 2: Visibility change safety net
+		// If a window was throttled and missed a cycle, the moment it becomes
+		// visible again it will immediately execute any pending refresh.
+		// -----------------------------------------------------------------------
+		var refreshPending = false;
+		var refreshPendingSince = null;
+
+		document.addEventListener('visibilitychange', function() {
+			if (!document.hidden && refreshPending) {
+				console.log("Tab became visible - executing pending refresh immediately");
+				refreshPending = false;
+				refreshPendingSince = null;
+				EmbedReport();
+			}
+		});
+
+		// -----------------------------------------------------------------------
+		// FIX 2B: Persistent Worker Watchdog
+		//
+		// The previous watchdog used setInterval — which Chrome ALSO throttles in
+		// background windows (to ~60s minimum). So the watchdog meant to rescue
+		// stuck instances was itself being throttled and never firing.
+		//
+		// This watchdog runs inside a PERSISTENT Web Worker. Workers are not
+		// subject to tab-level timer throttling, so the 15s heartbeat fires
+		// reliably regardless of whether the window is in the foreground or not.
+		//
+		// The Worker simply sends a "tick" message every 15 seconds. The main
+		// page receives each tick and checks two stuck states:
+		//
+		// CASE 1 — Hung embed: EmbedReport() was called but neither rendered nor
+		//   error ever fired. embedInProgress stays true past 60s. Force re-embed.
+		//
+		// CASE 2 — Stuck think-time: rendered fired and timer was scheduled but
+		//   callback never ran. refreshPending stays true past (thinkTime + 20s).
+		//
+		// Falls back to a throttled setInterval if Workers are blocked (file://).
+		// Even throttled, the Chrome launch flags reduce the impact significantly.
+		// -----------------------------------------------------------------------
+		(function startWatchdog() {
+			var watchdogIntervalMs = 15000;
+
+			function runWatchdogCheck() {
+				if (errorTracker.length > 0) return; // stopped intentionally
+
+				// CASE 1: embed started but no rendered/error event ever fired
+				if (embedInProgress && embedStartedAt !== null) {
+					var embedStuckMs = new Date() - embedStartedAt;
+					if (embedStuckMs > embedHangTimeoutMs) {
+						console.warn("Watchdog: embed stuck for "
+							+ Math.round(embedStuckMs / 1000) + "s (no rendered/error event) — force re-embedding");
+						embedInProgress = false;
+						embedStartedAt = null;
+						refreshPending = false;
+						refreshPendingSince = null;
+						EmbedReport();
+						return;
+					}
+				}
+
+				// CASE 2: think-time timer was suppressed, refresh never scheduled
+				if (refreshPending && refreshPendingSince !== null) {
+					var pendingStuckMs = new Date() - refreshPendingSince;
+					var pendingTimeoutMs = (thinkTimeSeconds * 1000) + 20000;
+					if (pendingStuckMs > pendingTimeoutMs) {
+						console.warn("Watchdog: refresh pending for "
+							+ Math.round(pendingStuckMs / 1000) + "s — force recovering");
+						refreshPending = false;
+						refreshPendingSince = null;
+						EmbedReport();
+					}
+				}
+			}
+
+			// Try to run the watchdog inside a persistent Worker (throttle-immune)
+			try {
+				var watchdogWorkerCode = [
+					'function tick() {',
+					'    self.postMessage("watchdog-tick");',
+					'    setTimeout(tick, ' + watchdogIntervalMs + ');',
+					'}',
+					'tick();'
+				].join('\n');
+				var watchdogBlob = new Blob([watchdogWorkerCode], { type: 'application/javascript' });
+				var watchdogWorker = new Worker(URL.createObjectURL(watchdogBlob));
+				watchdogWorker.onmessage = function() {
+					runWatchdogCheck();
+				};
+				watchdogWorker.onerror = function(e) {
+					console.warn("Watchdog Worker error — falling back to setInterval:", e.message);
+					watchdogWorker.terminate();
+					setInterval(runWatchdogCheck, watchdogIntervalMs);
+				};
+				console.log("Watchdog running in persistent Worker (throttle-immune)");
+			} catch(e) {
+				// file:// restriction — fall back to setInterval
+				// Chrome launch flags should reduce the throttling impact
+				console.warn("Watchdog Worker blocked — falling back to setInterval (ensure Chrome flags are set):", e.message);
+				setInterval(runWatchdogCheck, watchdogIntervalMs);
+			}
+		})();
+
+		// -----------------------------------------------------------------------
+		// FIX 4: Prevent Chrome Page Lifecycle Freeze
+		//
+		// Chrome's Page Lifecycle API freezes background pages under memory
+		// pressure. Unlike throttling, a frozen page suspends ALL JavaScript
+		// including Workers — so the watchdog stops completely and the instance
+		// never recovers until brought to focus.
+		//
+		// navigator.locks.request() with a never-resolving Promise holds a
+		// Web Lock permanently. Chrome will not freeze a page that holds an
+		// active lock. This is the correct API-level fix.
+		//
+		// The freeze/resume handlers act as last-resort recovery if Chrome
+		// freezes despite the lock (extreme memory pressure edge case).
+		// -----------------------------------------------------------------------
+		if (typeof navigator !== 'undefined' && navigator.locks) {
+			navigator.locks.request('pbi-load-test-keep-alive', { mode: 'shared' }, function() {
+				return new Promise(function() {}); // never resolves - holds lock permanently
+			});
+			console.log("Page freeze prevention: navigator.locks keep-alive acquired");
+		} else {
+			console.warn("navigator.locks not available - page may be frozen under memory pressure");
+		}
+
+		document.addEventListener('freeze', function() {
+			console.warn("FREEZE event - Chrome is freezing this page despite lock");
+			sessionStorage.setItem('frozenAt', new Date().toISOString());
+		});
+
+		document.addEventListener('resume', function() {
+			console.log("RESUME event - page unfrozen, force-recovering state");
+			embedInProgress = false;
+			embedStartedAt = null;
+			refreshPending = false;
+			refreshPendingSince = null;
+			setTimeout(function() { EmbedReport(); }, 500);
+		});
+
+		function validateConfiguration() {
+			var errors = [];
+			
+			if (typeof reportParameters === 'undefined') {
+				errors.push("reportParameters is undefined - check PBIReport.json is loaded");
+			} else {
+				if (!reportParameters.reportUrl) errors.push("reportUrl is missing in PBIReport.json");
+				if (!reportParameters.sessionRestart) errors.push("sessionRestart is missing in PBIReport.json");
+			}
+			
+			if (typeof accessToken === 'undefined') {
+				errors.push("accessToken is undefined - check PBIToken.json is loaded");
+			} else {
+				try {
+					var token = JSON.parse(accessToken);
+					if (!token.PBIToken || token.PBIToken.length < 100) {
+						errors.push("PBIToken appears invalid or empty in PBIToken.json");
+					}
+				} catch(e) {
+					errors.push("PBIToken.json has invalid JSON format");
+				}
+			}
+			
+			if (errors.length > 0) {
+				var divCounter = document.getElementById('LoadReportCounter');
+				divCounter.innerHTML = "<h2 style='color:red;'>Configuration Errors:</h2><ul style='color:red;'>";
+				for (var i = 0; i < errors.length; i++) {
+					divCounter.innerHTML += "<li>" + errors[i] + "</li>";
+				}
+				divCounter.innerHTML += "</ul><p>Please fix these errors and refresh the page.</p>";
+				
+				errorTracker = "Configuration validation failed";
+				return false;
+			}
+			
+			console.log("Configuration validated successfully");
+			return true;
+		}
+
+        function EmbedReport() {
+
+            if(errorTracker.length != 0) return;
+
+			// Mark embed as in-progress so the watchdog can detect a hung embed
+			// (i.e. EmbedReport was called but rendered/error never fired)
+			embedInProgress = true;
+			embedStartedAt = new Date();
+
+            if(report!=undefined) report.off("rendered");
+            if(report!=undefined) report.off("loaded");
+            if(report!=undefined) report.off("error");
+
+			var instanceId = sessionStorage.getItem('instanceId');
+			if (!instanceId) 
+			{
+				instanceId = 'instance_' + Math.random().toString(36).substr(2, 9);
+				sessionStorage.setItem('instanceId', instanceId);
+			}
+
+            // Get models (models contains enums)
+            var models = window['powerbi-client'].models;
+
+			var filterCounter = Math.floor(loadCounter / bookmarkList.length) % filtersCount;
+			var bookmarkCounter = loadCounter % bookmarkList.length;
+			var bookmarkValue = bookmarkList[bookmarkCounter];
+			if (filtersList != null)
+			{
+				if (isNaN(filterCounter))
+				{
+					filterValue = {
+						slicers: [],
+						filters: []
+					};
+				}
+				else
+				{
+					filterValue = filtersList[filterCounter];
+				}
+			}
+			else if (bookmarkCounter == 0)
+			{
+				filterValue = filterValue < filterMax ? ++filterValue : filterStart;            
+			}
+
+            // Embed configuration
+            var config = {
+                type: 'report',
+                tokenType: models.TokenType.Aad,
+                accessToken: PBIEtoken,
+                embedUrl: embedUrl,
+                id: reportId,
+                filters: filterValue.filters,
+				slicers: filterValue.slicers,
+				pageName: pageName,
+				bookmark: { name: bookmarkValue },
+                settings: {
+                    filterPaneEnabled: true,
+                    navContentPaneEnabled: true,
+                    layoutType: models.LayoutType[layoutType]            
+                }
+            };
+
+            // Embed the report
+			var justFlipBookmark = true;
+			lastRefreshStart = new Date(); 
+			performanceMetrics.embedStartTime = new Date();
+			performanceMetrics.loadedTime = null;
+			performanceMetrics.renderedTime = null;
+			performanceMetrics.loadedEventFired = false;
+			performanceMetrics.isCached = false;
+
+			if (bookmarkCounter == 0 || report == undefined)
+			{
+				report = powerbi.embed(embedDiv, config);
+				justFlipBookmark = false;
+			}
+
+            // Track when report data is loaded (before rendering)
+			report.on("loaded", function() {
+				performanceMetrics.loadedTime = new Date();
+				performanceMetrics.loadedEventFired = true;
+				var loadTimeMs = performanceMetrics.loadedTime - performanceMetrics.embedStartTime;
+				console.log("Report loaded (data fetched) in " + loadTimeMs + "ms");
+			});
+
+            // Error handler
+            report.on("error", function (event) {
+
+                errorCount++;
+                consecutiveErrors++;
+
+                // Embed received a response (even if error) — clear hung-embed watchdog
+                embedInProgress = false;
+                embedStartedAt = null;
+
+                var divCounter = document.getElementById('LoadReportCounter');
+                var currentTime = new Date().toTimeString();
+
+                divCounter.innerHTML = divCounter.innerHTML
+                    + "<br/><span style='color:orange;'>[Error #" + errorCount + " at " + currentTime + "] "
+                    + event.detail.detailedMessage + " "
+                    + event.detail.errorCode + "</span>";
+
+                console.error("Report Error:", event.detail);
+
+                if (consecutiveErrors >= maxConsecutiveErrors) {
+                    divCounter.innerHTML += "<br/><span style='color:red;font-weight:bold;'>"
+                        + "STOPPED: Too many consecutive errors (" + consecutiveErrors + ")</span>";
+                    errorTracker = "Too many consecutive errors";
+                    report.off("error");
+                    return;
+                }
+
+                if (errorCount >= maxErrors) {
+                    divCounter.innerHTML += "<br/><span style='color:red;font-weight:bold;'>"
+                        + "STOPPED: Max errors reached (" + maxErrors + ")</span>";
+                    errorTracker = "Max errors exceeded";
+                    report.off("error");
+                    return;
+                }
+
+                divCounter.innerHTML += "<br/><span style='color:yellow;'>Retrying in 10 seconds...</span>";
+
+				// FIX 1 applied: use workerTimer instead of setTimeout for retry
+                workerTimer(function() {
+                    EmbedReport();
+                }, 10000);
+
+            });
+
+            // Rendered event handler
+			report.on("rendered", function() { 
+
+				// Embed completed — clear the hung-embed watchdog flag
+				embedInProgress = false;
+				embedStartedAt = null;
+
+			// Calculate performance metrics
+				performanceMetrics.renderedTime = new Date();
+				
+				var totalTimeMs = performanceMetrics.renderedTime - performanceMetrics.embedStartTime;
+				var loadTimeMs = (performanceMetrics.loadedTime !== null) 
+					? (performanceMetrics.loadedTime - performanceMetrics.embedStartTime) 
+					: 0;
+				var renderTimeMs = totalTimeMs - loadTimeMs;
+				
+				// Round to seconds
+				performanceMetrics.totalTime = Math.round(totalTimeMs / 1000);
+				performanceMetrics.timeToLoad = Math.round(loadTimeMs / 1000);
+				performanceMetrics.timeToRender = Math.round(renderTimeMs / 1000);
+				
+				// Detect cache hit based on multiple indicators
+				performanceMetrics.isCached = (
+					totalTimeMs < 1000 ||
+					!performanceMetrics.loadedEventFired ||
+					(justFlipBookmark && totalTimeMs < 2000)
+				);
+				
+				console.log("Performance Breakdown:");
+				console.log("  - Total Time: " + performanceMetrics.totalTime + "s (" + totalTimeMs + "ms)");
+				console.log("  - Time to Load: " + performanceMetrics.timeToLoad + "s (" + loadTimeMs + "ms)");
+				console.log("  - Time to Render: " + performanceMetrics.timeToRender + "s (" + renderTimeMs + "ms)");
+				console.log("  - Cache Hit: " + (performanceMetrics.isCached ? "Yes" : "No"));
+				
+				// Update display
+				var divCounter = document.getElementById('LoadReportCounter');
+				var avgDuration = Math.round(((new Date()) - lastRefreshStart) / 1000);
+				divCounter.innerHTML = (loadCounter + 1)
+					 + " refreshes<br/>" 
+					 + avgDuration + " seconds last refresh time<br/>"
+					 + thinkTimeSeconds + " seconds think time";
+				
+				// Send metrics to monitoring (only if loadCounter > 0 to skip first load)
+				if (loadCounter > 0) {
+					var currentStatus = (typeof errorTracker !== 'undefined' && errorTracker.length > 0) ? "Error" : "Success";
+					var currentBookmark = (typeof bookmarkValue !== 'undefined' && bookmarkValue) ? bookmarkValue : "";
+					var currentPage = (typeof pageName !== 'undefined' && pageName) ? pageName : "";
+					
+					// Build filter configuration string
+					var filterConfigStr = "";
+					if (typeof filterValue !== 'undefined' && filterValue && filterValue.filters) {
+						var filterParts = [];
+						for (var i = 0; i < filterValue.filters.length; i++) {
+							var f = filterValue.filters[i];
+							if (f.values && f.values.length > 0) {
+								filterParts.push(f.target.column + "=" + f.values.join("|"));
+							}
+						}
+						filterConfigStr = filterParts.join(";");
+					}
+					
+					// Get memory usage (if available)
+					var memoryMB = "";
+					if (performance.memory) {
+						memoryMB = Math.round(performance.memory.usedJSHeapSize / 1048576);
+					}
+					
+					// Send enhanced metrics
+					var logUrl = "http://localhost:8080/log?avg=" + avgDuration 
+						+ "&instance=" + encodeURIComponent(instanceId)
+						+ "&iteration=" + loadCounter
+						+ "&errorCount=" + errorCount
+						+ "&status=" + encodeURIComponent(currentStatus)
+						+ "&filterConfig=" + encodeURIComponent(filterConfigStr)
+						+ "&bookmarkName=" + encodeURIComponent(currentBookmark)
+						+ "&pageName=" + encodeURIComponent(currentPage)
+						+ "&memoryMB=" + memoryMB
+						+ "&timeToLoad=" + performanceMetrics.timeToLoad
+						+ "&timeToRender=" + performanceMetrics.timeToRender
+						+ "&totalTime=" + performanceMetrics.totalTime
+						+ "&isCached=" + (performanceMetrics.isCached ? "1" : "0");
+					
+					fetch(logUrl).catch(err => console.error("Logging failed:", err));
+				}
+				
+				consecutiveErrors = 0;
+				
+				// Increment counter BEFORE scheduling next run
+				loadCounter++;
+
+				// -------------------------------------------------------------------
+				// FIX 3: Deferred session restart
+				// Original code called location.reload() immediately. When the window
+				// is backgrounded, Chrome can suspend the page mid-reload causing it
+				// to hang until brought to focus. Now we wait until the window is
+				// visible before reloading to prevent the suspended-reload hang.
+				// -------------------------------------------------------------------
+				if ((loadCounter % sessionRestart) === 0 && loadCounter > 0) {
+					sessionStorage.setItem('reloadCounter', loadCounter);
+					sessionStorage.setItem('originalStartTime', startTime);
+
+					if (!document.hidden) {
+						// Window is visible — reload immediately as before
+						location.reload(false);
+					} else {
+						// Window is backgrounded — queue the reload until it becomes visible
+						console.log("Session restart queued - waiting for window to become visible");
+						var reloadOnVisible = function() {
+							if (!document.hidden) {
+								document.removeEventListener('visibilitychange', reloadOnVisible);
+								location.reload(false);
+							}
+						};
+						// Remove any previous listener to prevent stacking across cycles
+						document.removeEventListener('visibilitychange', reloadOnVisible);
+						document.addEventListener('visibilitychange', reloadOnVisible);
+					}
+					// Return here — do not schedule the next EmbedReport() since a
+					// reload is pending and will reinitialise the page from scratch
+					return;
+				}
+
+				// -------------------------------------------------------------------
+				// FIX 1 + FIX 2 combined: schedule next refresh
+				// workerTimer fires reliably in background tabs (FIX 1).
+				// refreshPending flag allows the visibilitychange listener above
+				// to catch any edge case where the worker tick was missed (FIX 2).
+				// -------------------------------------------------------------------
+				refreshPending = true;
+				refreshPendingSince = new Date();
+				workerTimer(function() {
+					refreshPending = false;
+					refreshPendingSince = null;
+					EmbedReport();
+				}, thinkTimeSeconds * 1000);
+
+			});
+
+			if (justFlipBookmark)
+			{
+				report.bookmarksManager.apply(bookmarkValue);
+			}
+
+        } 
+
+        function GetQSParam (name,url) {
+            var results = new RegExp('[\?&]' + name + '=([^&#]*)')
+                .exec(url);
+            if (results == null) {
+                return 0;
+            }
+            return results[1] || 0;
+        }
+
+    </script>
+
+</head>
+
+<body>
+
+    <div id="LoadReportCounter">0</div>
+
+    <hr style="width:99%;" />
+
+    <div id="embedDiv" style="height: 800px; width: 100%; max-width: 1200px;" ></div>
+
+</body>
+
+<script>
+
+    if(validateConfiguration()) {
+        if(report==undefined) EmbedReport();
+    } else {
+        console.error("Configuration validation failed - test will not start");
+    }
+
+</script>
+
+</html>

@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__powerbi-modeling-mcp__connection_operations",
+      "mcp__powerbi-modeling-mcp__table_operations",
+      "mcp__powerbi-modeling-mcp__relationship_operations",
+      "mcp__powerbi-modeling-mcp__measure_operations",
+      "mcp__powerbi-modeling-mcp__column_operations",
+      "mcp__powerbi-modeling-mcp__partition_operations",
+      "mcp__powerbi-modeling-mcp__named_expression_operations",
+      "Bash(ls:*)",
+      "mcp__filesystem__list_directory",
+      "mcp__filesystem__directory_tree",
+      "mcp__powerbi-modeling-mcp__batch_measure_operations",
+      "mcp__powerbi-modeling-mcp__batch_column_operations",
+      "mcp__filesystem__read_text_file",
+      "Bash(curl -s -H \"Authorization: Bearer MTY2Njk4MjgyMDI3OrmfXQ785EwBCFDnwLvwBz9vv+eS\" \"https://confluence.e-loreal.com/rest/api/space/BTDP/content/page?limit=100&start=100&expand=title\")",
+      "Bash(python -c \"import json,sys; data=json.load\\(sys.stdin\\); [print\\(f\"\"{p[''''id'''']} - {p[''''title'''']}\"\"\\) for p in data.get\\(''''results'''',[]\\)]\")",
+      "Bash(curl -s -H \"Authorization: Bearer MTY2Njk4MjgyMDI3OrmfXQ785EwBCFDnwLvwBz9vv+eS\" \"https://confluence.e-loreal.com/rest/api/content/405719709?expand=body.view\")",
+      "Bash(curl -s -H \"Authorization: Bearer MTY2Njk4MjgyMDI3OrmfXQ785EwBCFDnwLvwBz9vv+eS\" \"https://confluence.e-loreal.com/rest/api/content/462805855?expand=body.view\")",
+      "Bash(curl -s -H \"Authorization: Bearer MTY2Njk4MjgyMDI3OrmfXQ785EwBCFDnwLvwBz9vv+eS\" \"https://confluence.e-loreal.com/rest/api/content/509275503?expand=body.view\")",
+      "Bash(curl -s -H \"Authorization: Bearer MTY2Njk4MjgyMDI3OrmfXQ785EwBCFDnwLvwBz9vv+eS\" \"https://confluence.e-loreal.com/rest/api/content/420814428?expand=body.view\")"
+    ]
+  }
+}
