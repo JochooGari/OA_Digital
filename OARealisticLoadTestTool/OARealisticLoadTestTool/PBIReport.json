@@ -1,15 +1,7 @@
-reportParameters= {
-  "reportUrl": "https://app.powerbi.com/reportEmbed?reportId=82891daf-bbce-4a34-8188-d91dbd8f7041&groupId=83771731-557c-43cc-b840-535ad6d2e110&w=2&config=eyJjbHVzdGVyVXJsIjoiaHR0cHM6Ly9XQUJJLU5PUlRILUVVUk9QRS1ELVBSSU1BUlktcmVkaXJlY3QuYW5hbHlzaXMud2luZG93cy5uZXQiLCJlbWJlZEZlYXR1cmVzIjp7InVzYWdlTWV0cmljc1ZOZXh0Ijp0cnVlfX0%3d",
-  "pageName": "45941f97-dbbf-471b-8ec7-7f6a9887c847",
- 
- "filters": [ 
-              {
-    "filterTable": "division",
-    "filterColumn": "division_code",
-    "isSlicer": true,
-    "filtersList": ["CPD","LDB","LLD","No-division-code","PPD"]
-  } 
-              ],          
-  "sessionRestart": 100,
-  "thinkTimeSeconds": 5
+﻿reportParameters= {
+    "reportUrl":  "https://app.powerbi.com/reportEmbed?reportId=82891daf-bbce-4a34-8188-d91dbd8f7041\u0026groupId=83771731-557c-43cc-b840-535ad6d2e110\u0026w=2\u0026config=eyJjbHVzdGVyVXJsIjoiaHR0cHM6Ly9XQUJJLU5PUlRILUVVUk9QRS1ELVBSSU1BUlktcmVkaXJlY3QuYW5hbHlzaXMud2luZG93cy5uZXQiLCJlbWJlZEZlYXR1cmVzIjp7InVzYWdlTWV0cmljc1ZOZXh0Ijp0cnVlfX0%3d",
+    "pageName":  "45941f97-dbbf-471b-8ec7-7f6a9887c847",
+    "sessionRestart":  100,
+    "thinkTimeSeconds":  5,
+    "layoutType":  "Master"
 };

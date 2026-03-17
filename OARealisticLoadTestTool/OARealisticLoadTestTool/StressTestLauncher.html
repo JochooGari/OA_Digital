@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stress Test Launcher</title>
+  <style>
+    :root {
+      --bg: #f3efe7;
+      --panel: #fffaf2;
+      --line: #d4cab8;
+      --text: #1f2a2e;
+      --muted: #5e6a70;
+      --accent: #0f766e;
+      --accent-strong: #115e59;
+      --soft: #d7efe9;
+      --warning: #9a3412;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top left, #f9d8a8 0, transparent 28%),
+        radial-gradient(circle at top right, #b8e1d9 0, transparent 26%),
+        linear-gradient(180deg, var(--bg), #ece6d8);
+      color: var(--text);
+    }
+
+    .wrap {
+      max-width: 960px;
+      margin: 32px auto;
+      padding: 0 16px 32px;
+    }
+
+    .hero, .panel {
+      background: rgba(255, 250, 242, 0.94);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 16px 40px rgba(31, 42, 46, 0.08);
+    }
+
+    .hero {
+      padding: 24px;
+      margin-bottom: 18px;
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .panel {
+      padding: 20px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 11px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      font: inherit;
+    }
+
+    textarea {
+      min-height: 84px;
+      resize: vertical;
+    }
+
+    .section-title {
+      margin: 18px 0 12px;
+      font-size: 18px;
+    }
+
+    .filter-card {
+      border: 1px dashed var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      background: #fffdf8;
+      margin-bottom: 12px;
+    }
+
+    .filter-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .checkbox {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 14px;
+      margin: 6px 0 14px;
+    }
+
+    .checkbox input {
+      width: auto;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 18px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .primary:hover {
+      background: var(--accent-strong);
+    }
+
+    .secondary {
+      background: var(--soft);
+      color: var(--accent-strong);
+    }
+
+    .ghost {
+      background: transparent;
+      border: 1px solid var(--line);
+      color: var(--muted);
+    }
+
+    .status {
+      margin-top: 16px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      display: none;
+    }
+
+    .status.info {
+      display: block;
+      background: #eef7f4;
+      color: var(--accent-strong);
+      border: 1px solid #bfded8;
+    }
+
+    .status.error {
+      display: block;
+      background: #fff1ed;
+      color: var(--warning);
+      border: 1px solid #fed7c7;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <h1>Stress Test Launcher</h1>
+      <p>Renseignez les parametres essentiels, lancez le test, puis laissez l'outil PowerShell s'occuper du reste. Cette interface modifie temporairement <code>PBIReport.json</code> avant de demarrer <code>Orchestrator.ps1</code>.</p>
+    </section>
+
+    <section class="panel">
+      <div class="grid">
+        <div>
+          <label for="testId">Test ID</label>
+          <input id="testId" type="text">
+        </div>
+        <div>
+          <label for="instances">Instances</label>
+          <input id="instances" type="number" min="1" value="2">
+        </div>
+        <div>
+          <label for="thinkTimeSeconds">Think time (s)</label>
+          <input id="thinkTimeSeconds" type="number" min="0" value="5">
+        </div>
+        <div>
+          <label for="metricsRefreshSeconds">Refresh metrics (s)</label>
+          <input id="metricsRefreshSeconds" type="number" min="1" value="5">
+        </div>
+        <div>
+          <label for="sessionRestart">Session restart</label>
+          <input id="sessionRestart" type="number" min="1" value="100">
+        </div>
+        <div>
+          <label for="layoutType">Layout</label>
+          <select id="layoutType">
+            <option value="Master">Master</option>
+            <option value="MobilePortrait">MobilePortrait</option>
+            <option value="MobileLandscape">MobileLandscape</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label for="reportUrl">Report URL</label>
+        <textarea id="reportUrl"></textarea>
+      </div>
+
+      <div class="grid" style="margin-top: 16px;">
+        <div>
+          <label for="pageName">Page name / section ID</label>
+          <input id="pageName" type="text" placeholder="ReportSection...">
+        </div>
+      </div>
+
+      <h2 class="section-title">Filtres</h2>
+      <div id="filters"></div>
+
+      <div class="actions">
+        <button class="secondary" id="addFilter" type="button">Ajouter un filtre</button>
+        <button class="ghost" id="resetDefaults" type="button">Recharger la config</button>
+        <button class="primary" id="launchTest" type="button">Lancer le test</button>
+      </div>
+
+      <div class="hint">Les valeurs de filtre doivent etre separees par des virgules. Exemple : <code>CPD, LDB, LLD</code>.</div>
+      <div class="status" id="status"></div>
+    </section>
+  </div>
+
+  <template id="filterTemplate">
+    <div class="filter-card">
+      <div class="filter-head">
+        <strong>Filtre</strong>
+        <button class="ghost remove-filter" type="button">Supprimer</button>
+      </div>
+      <div class="grid">
+        <div>
+          <label>Filter table</label>
+          <input class="filterTable" type="text">
+        </div>
+        <div>
+          <label>Filter column</label>
+          <input class="filterColumn" type="text">
+        </div>
+      </div>
+      <label>Valeurs</label>
+      <textarea class="filtersList" placeholder="Valeur1, Valeur2, Valeur3"></textarea>
+      <label class="checkbox">
+        <input class="isSlicer" type="checkbox">
+        Utiliser comme slicer
+      </label>
+    </div>
+  </template>
+
+  <script>
+    const filterContainer = document.getElementById("filters");
+    const filterTemplate = document.getElementById("filterTemplate");
+    const statusBox = document.getElementById("status");
+
+    function setStatus(message, type = "info") {
+      statusBox.textContent = message;
+      statusBox.className = `status ${type}`;
+    }
+
+    function clearStatus() {
+      statusBox.textContent = "";
+      statusBox.className = "status";
+    }
+
+    function addFilter(filter = {}) {
+      const node = filterTemplate.content.firstElementChild.cloneNode(true);
+      node.querySelector(".filterTable").value = filter.filterTable || "";
+      node.querySelector(".filterColumn").value = filter.filterColumn || "";
+      node.querySelector(".filtersList").value = Array.isArray(filter.filtersList) ? filter.filtersList.join(", ") : "";
+      node.querySelector(".isSlicer").checked = Boolean(filter.isSlicer);
+      node.querySelector(".remove-filter").addEventListener("click", () => node.remove());
+      filterContainer.appendChild(node);
+    }
+
+    function collectFilters() {
+      return Array.from(document.querySelectorAll(".filter-card")).map((card) => {
+        const values = card.querySelector(".filtersList").value
+          .split(",")
+          .map((value) => value.trim())
+          .filter(Boolean);
+
+        return {
+          filterTable: card.querySelector(".filterTable").value.trim(),
+          filterColumn: card.querySelector(".filterColumn").value.trim(),
+          filtersList: values,
+          isSlicer: card.querySelector(".isSlicer").checked
+        };
+      }).filter((filter) => filter.filterTable && filter.filterColumn && filter.filtersList.length > 0);
+    }
+
+    function fillForm(config) {
+      document.getElementById("testId").value = config.testId || "";
+      document.getElementById("instances").value = config.instances || 2;
+      document.getElementById("thinkTimeSeconds").value = config.thinkTimeSeconds || 5;
+      document.getElementById("metricsRefreshSeconds").value = config.metricsRefreshSeconds || 5;
+      document.getElementById("sessionRestart").value = config.sessionRestart || 100;
+      document.getElementById("layoutType").value = config.layoutType || "Master";
+      document.getElementById("reportUrl").value = config.reportUrl || "";
+      document.getElementById("pageName").value = config.pageName || "";
+
+      filterContainer.innerHTML = "";
+      (config.filters || []).forEach(addFilter);
+      if (!config.filters || config.filters.length === 0) {
+        addFilter();
+      }
+    }
+
+    async function loadDefaults() {
+      clearStatus();
+      const response = await fetch("/api/defaults");
+      const config = await response.json();
+      fillForm(config);
+    }
+
+    function buildPayload() {
+      return {
+        testId: document.getElementById("testId").value.trim(),
+        instances: Number(document.getElementById("instances").value),
+        thinkTimeSeconds: Number(document.getElementById("thinkTimeSeconds").value),
+        metricsRefreshSeconds: Number(document.getElementById("metricsRefreshSeconds").value),
+        sessionRestart: Number(document.getElementById("sessionRestart").value),
+        layoutType: document.getElementById("layoutType").value,
+        reportUrl: document.getElementById("reportUrl").value.trim(),
+        pageName: document.getElementById("pageName").value.trim(),
+        filters: collectFilters()
+      };
+    }
+
+    async function launchTest() {
+      clearStatus();
+      const payload = buildPayload();
+
+      if (!payload.reportUrl) {
+        setStatus("Le report URL est obligatoire.", "error");
+        return;
+      }
+
+      if (!payload.testId) {
+        setStatus("Le Test ID est obligatoire.", "error");
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/launch", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        if (!response.ok || !result.ok) {
+          throw new Error(result.message || "Impossible de lancer le test.");
+        }
+
+        setStatus(result.message, "info");
+      } catch (error) {
+        setStatus(error.message, "error");
+      }
+    }
+
+    document.getElementById("addFilter").addEventListener("click", () => addFilter());
+    document.getElementById("resetDefaults").addEventListener("click", () => loadDefaults().catch((error) => setStatus(error.message, "error")));
+    document.getElementById("launchTest").addEventListener("click", () => launchTest());
+
+    loadDefaults().catch((error) => setStatus(error.message, "error"));
+  </script>
+</body>
+</html>

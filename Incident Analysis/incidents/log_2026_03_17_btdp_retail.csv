@@ -1,0 +1,28 @@
+﻿Workspace,Item kind,Item name,Operation,Start,End,Status,User,Duration (s),Total CU (s),Timepoint CU (s),Throttling (s),% of Base capacity,Billing type
+GOLD Retail - PROD,Dataset,Gold Retail Report,Query,2026-03-17 04:41:13,2026-03-17 04:45:59,Failure,daniel.diaz1@loreal.com,286,51912.4960,5191.2496,0,16.90%,Billable
+GOLD Retail - PROD,Dataset,Gold Retail Report,Query,2026-03-17 04:41:13,2026-03-17 04:45:38,Failure,daniel.diaz1@loreal.com,265,19195.7440,1919.5744,0,6.25%,Billable
+GOLD Retail - PROD,Dataset,Gold Retail Report,Query,2026-03-17 04:42:34,2026-03-17 04:46:41,Failure,daniel.diaz1@loreal.com,247,16876.4960,1687.6496,0,5.49%,Billable
+GOLD Retail - PROD,Dataset,Gold Retail Report,Query,2026-03-17 04:42:34,2026-03-17 04:46:33,Failure,daniel.diaz1@loreal.com,239,21571.0080,2157.1008,0,7.02%,Billable
+GOLD Retail - PROD,Dataset,Gold Retail Report,Query,2026-03-17 04:41:13,2026-03-17 04:45:09,Failure,daniel.diaz1@loreal.com,236,34272.2560,3427.2256,0,11.16%,Billable
+GOLD Retail - PROD,Dataset,Gold Retail Report,Query,2026-03-17 04:43:46,2026-03-17 04:47:42,Failure,daniel.diaz1@loreal.com,236,36569.2480,3656.9248,0,11.90%,Billable
+GOLD Retail - PROD,Dataset,Gold Retail Report,Query,2026-03-17 04:41:13,2026-03-17 04:45:02,Failure,daniel.diaz1@loreal.com,229,33865.2480,3386.5248,0,11.02%,Billable
+GOLD Retail - PROD,Dataset,Gold Retail Report,Query,2026-03-17 04:42:33,2026-03-17 04:45:57,Success,daniel.diaz1@loreal.com,204,21956.2560,2195.6256,0,7.15%,Billable
+GOLD Retail - PROD,Dataset,Gold Retail Report,Query,2026-03-17 04:42:33,2026-03-17 04:45:53,Success,daniel.diaz1@loreal.com,200,12277.7440,1227.7744,0,4.00%,Billable
+GOLD Retail - PROD,Dataset,Gold Retail Report,Query,2026-03-17 04:43:46,2026-03-17 04:47:03,Success,daniel.diaz1@loreal.com,197,20949.0080,2094.9008,0,6.82%,Billable
+GOLD Retail - PROD,Dataset,Gold Retail Report,Query,2026-03-17 04:43:46,2026-03-17 04:46:31,Success,daniel.diaz1@loreal.com,165,8093.0080,809.3008,0,2.63%,Billable
+GOLD Retail - PROD,Dataset,Gold Retail Report,Query,2026-03-17 04:43:46,2026-03-17 04:46:28,Success,daniel.diaz1@loreal.com,162,8051.5040,805.1504,0,2.62%,Billable
+GOLD Retail - PROD,Dataset,Gold Retail Report,Query,2026-03-17 04:45:01,2026-03-17 04:47:43,Success,daniel.diaz1@loreal.com,162,32043.5040,3204.3504,0,10.43%,Billable
+GOLD Retail - PROD,Dataset,Gold Retail Report,Query,2026-03-17 04:45:01,2026-03-17 04:46:45,Success,daniel.diaz1@loreal.com,104,11784.7520,1178.4752,0,3.84%,Billable
+GOLD Retail - PROD,Dataset,Gold Retail Report,Query,2026-03-17 04:46:22,2026-03-17 04:47:43,Success,daniel.diaz1@loreal.com,81,17211.7440,1721.1744,0,5.60%,Billable
+GOLD Retail - PROD,Dataset,Gold Retail Report,Query,2026-03-17 04:45:01,2026-03-17 04:45:56,Success,daniel.diaz1@loreal.com,55,2794.0000,279.4000,0,0.91%,Billable
+GOLD Retail - PROD,Dataset,Gold Retail Report,Query,2026-03-17 04:45:01,2026-03-17 04:45:25,Success,daniel.diaz1@loreal.com,24,2605.0080,260.5008,0,0.85%,Billable
+GOLD Retail - PROD,Dataset,Gold Retail Report,Query,2026-03-17 04:46:22,2026-03-17 04:46:43,Success,daniel.diaz1@loreal.com,21,674.0000,67.4000,0,0.22%,Billable
+GOLD Retail - PROD,Dataset,Gold Retail Report,Query,2026-03-17 04:47:25,2026-03-17 04:47:26,Success,laipeng.tan@loreal.com,1,21.2480,2.1248,0,0.01%,Billable
+GOLD Retail - PROD,Dataset,Gold Retail Report,Query,2026-03-17 04:46:21,2026-03-17 04:46:21,Success,daniel.diaz1@loreal.com,0,3.0080,0.3008,0,0.00%,Billable
+GOLD Retail - PROD,Dataset,Gold Retail Report,Query,2026-03-17 04:47:25,2026-03-17 04:47:25,Success,laipeng.tan@loreal.com,0,0.2560,0.0256,0,0.00%,Billable
+GOLD Retail - PROD,Dataset,Gold Retail Report,XMLA Read Operation,2026-03-17 04:47:52,2026-03-17 04:47:52,Success,rachel.koh@loreal.com,0,0.5120,0.0512,0,0.00%,Billable
+GOLD Retail - PROD,Dataset,Gold Retail Report,XMLA Read Operation,2026-03-17 04:47:54,2026-03-17 04:47:54,Success,rachel.koh@loreal.com,0,7.5040,0.7504,0,0.00%,Billable
+GOLD Retail - PROD,Dataset,Gold Retail Report,XMLA Read Operation,2026-03-17 04:47:55,2026-03-17 04:47:55,Success,rachel.koh@loreal.com,0,1.0080,0.1008,0,0.00%,Billable
+GOLD Retail - PROD,Dataset,Gold Retail Report,XMLA Read Operation,2026-03-17 04:47:56,2026-03-17 04:47:56,Success,rachel.koh@loreal.com,0,1.2480,0.1248,0,0.00%,Billable
+GOLD Retail - PROD,Dataset,Gold Retail Report,XMLA Read Operation,2026-03-17 04:47:57,2026-03-17 04:47:57,Success,rachel.koh@loreal.com,0,1.2480,0.1248,0,0.00%,Billable
+GOLD Retail - PROD,Dataset,Gold Retail Report,XMLA Read Operation,2026-03-17 04:47:58,2026-03-17 04:47:58,Success,rachel.koh@loreal.com,0,1.5040,0.1504,0,0.00%,Billable

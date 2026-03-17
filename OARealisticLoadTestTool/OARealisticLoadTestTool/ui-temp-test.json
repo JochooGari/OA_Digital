@@ -1,0 +1,11 @@
+{
+  "testId": "TEST_UI_LOCAL_1",
+  "instances": 1,
+  "thinkTimeSeconds": 5,
+  "metricsRefreshSeconds": 5,
+  "sessionRestart": 100,
+  "layoutType": "Master",
+  "reportUrl": "https://app.powerbi.com/groups/286131fb-875a-47b8-9e43-515a0438c622/reports/ff8f637c-d96f-4a2b-8dc4-170ce4bf7b80/aeb61750c1b756289000?experience=power-bi",
+  "pageName": "",
+  "filters": []
+}

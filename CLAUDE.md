@@ -1,7 +1,7 @@
 # CLAUDE.md — Contexte projet OA Digital / Power BI COE
 
 > Fichier lu automatiquement par Claude Code à chaque démarrage.
-> Mis à jour le 2026-03-12.
+> Mis à jour le 2026-03-16.
 
 ---
 
@@ -356,6 +356,45 @@ git commit -m "message"
 git push origin main                                          # perso JochooGari
 git subtree push --prefix=Auto_Licence_Clean loreal developer # pro L'Oréal
 ```
+
+---
+
+## Stratégie COE et contexte technique
+
+### Stratégie du COE Power BI
+
+Le COE **accompagne** les use cases mais ne corrige pas leurs modèles à leur place.
+La responsabilité de l'optimisation, du RLS et du nettoyage repose sur les **équipes propriétaires**.
+
+### Problème connu — Tables "Unsecured" et AMAAS (OA Pass)
+
+L'ancien connecteur BigQuery utilise le RLS côté GCP via les vues `*_unsecured` :
+- La table contient toutes les données (ex : 1M lignes × 300 users = 300M lignes)
+- Le filtre se fait via **jointure sur l'adresse e-mail** (AMAAS/OA Pass)
+- **Si l'utilisateur est Membre ou Admin** → le RLS ne s'applique pas → Power BI charge la table complète
+- **Solution** : accès **Viewer** pour les non-contributeurs, **"Tester en tant que rôle"** pour les devs
+
+### Anti-patterns identifiés lors des audits
+
+- Tables de faits à **190 colonnes** en DirectQuery (→ modèle en étoile, < 50 colonnes)
+- Visuels affichant **40+ mesures** simultanément avec mesures imbriquées
+- Détection changements à **30s** (→ minimum 5 min)
+- Données UAT poussées en prod pour tester (→ utiliser l'outil de stress test COE)
+- DirectQuery chaîné vers Analysis Services (double CU)
+
+### Monitoring : Fabric vs Premium
+
+- **Premium (P SKU)** : monitoring sur 2h → mode **réactif** (réparation)
+- **Fabric (F SKU)** : monitoring sur 30s → mode **préventif** (prévention)
+- Recommandation : migrer les capacités critiques vers Fabric
+
+### Documentation de référence
+
+- Paramètres capacité P1-P4 : `Incident Analysis/Capacity_Settings_P1_P4.md`
+- Best practices : `Incident Analysis/Best_Practices_Capacity_Management.md`
+- Troubleshooting : `Incident Analysis/Troubleshooting_Guide.md`
+- KQL monitoring : `Incident Analysis/KQL_Queries_Monitoring.md`
+- Incident nefapbtdpcommunity2 : `Incident Analysis/incidents/INC10281567-nefapbtdpcommunity2.md`
 
 ---
 
